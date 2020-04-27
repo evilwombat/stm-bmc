@@ -23,6 +23,8 @@
 /* We assume Timer2 runs at 72MHz (the maximum). If yours runs at a different rate, set it here. */
 #define TIMER2_FREQ_HZ          72000000
 
+/* Set up sequencer timer and DMA */
 void sequencer_init();
-void sequencer_run(const uint16_t *seq, int len);
-void sequencer_run_cpu(const uint32_t *seq, int len);
+
+/* Execute a given BMC GPIO control sequence */
+void sequencer_run(const uint32_t *seq, int len);

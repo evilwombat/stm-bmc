@@ -18,6 +18,7 @@
 
 #include <string.h>
 #include "sequencer.h"
+#include "util.h"
 
 TIM_HandleTypeDef htimer2;
 DMA_HandleTypeDef hdma_tim2_update;
@@ -44,7 +45,7 @@ static void sequencer_timer2_init(void)
     HAL_TIMEx_MasterConfigSynchronization(&htimer2, &sMasterConfig);
 }
 
-static void sequencer_dma_start(const uint16_t *seq, int len)
+static void sequencer_dma_start(const uint32_t *seq, int len)
 {
     /* Peripheral clock enable */
     __HAL_RCC_TIM2_CLK_ENABLE();
@@ -55,7 +56,7 @@ static void sequencer_dma_start(const uint16_t *seq, int len)
     hdma_tim2_update.Init.MemInc = DMA_MINC_ENABLE;
     hdma_tim2_update.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
     hdma_tim2_update.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
-    hdma_tim2_update.Init.Mode = DMA_CIRCULAR;
+    hdma_tim2_update.Init.Mode = DMA_NORMAL;
     hdma_tim2_update.Init.Priority = DMA_PRIORITY_VERY_HIGH;
 
     HAL_DMA_Init(&hdma_tim2_update);
@@ -64,17 +65,16 @@ static void sequencer_dma_start(const uint16_t *seq, int len)
 	__HAL_TIM_ENABLE_DMA(&htimer2, TIM_DMA_UPDATE);
 }
 
-void sequencer_run(const uint16_t *seq, int len)
+void sequencer_run(const uint32_t *seq, int len)
 {
 	__HAL_TIM_DISABLE_DMA(&htimer2, TIM_DMA_UPDATE);
     __HAL_TIM_DISABLE(&htimer2);
     sequencer_dma_start(seq, len);
 
-
     __HAL_TIM_SET_COUNTER(&htimer2, 0);
 
     /* Clear the DMA transfer status flags for the DMA we're using */
-    DMA1->IFCR = (DMA_IFCR_CTCIF5 | DMA_IFCR_CHTIF5);
+    DMA1->IFCR = (DMA_IFCR_CTCIF2 | DMA_IFCR_CHTIF2);
 
     /* Enable the timer.... and so it begins */
     __HAL_TIM_ENABLE(&htimer2);
@@ -85,31 +85,11 @@ void sequencer_run(const uint16_t *seq, int len)
     }
 */
     /* Wait for DMA to complete */
-    while(!(DMA1->ISR & DMA_ISR_TCIF5));
+    while(!(DMA1->ISR & DMA_ISR_TCIF2));
 
     __HAL_TIM_DISABLE(&htimer2);
 
 	__HAL_DMA_DISABLE(&hdma_tim2_update);
-}
-
-void sequencer_run_cpu(const uint32_t *seq, int len)
-{
-    __HAL_RCC_TIM2_CLK_ENABLE();
-	__HAL_TIM_DISABLE_DMA(&htimer2, TIM_DMA_UPDATE);
-    __HAL_TIM_DISABLE(&htimer2);
-
-    __HAL_TIM_SET_COUNTER(&htimer2, 0);
-
-    __HAL_TIM_ENABLE(&htimer2);
-
-    int i = 0;
-
-    for (i = 0; i != 255; i++) {
-        GPIOB->ODR = seq[i];
-//        while(TIM2->CNT & 0x02);
-    }
-
-    __HAL_TIM_DISABLE(&htimer2);
 }
 
 void sequencer_init()
