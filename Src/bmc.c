@@ -10,8 +10,9 @@
 
 #define PIN_SAFETY  9
 
-#define PIN_ANN 0
-#define PIN_GEN 1
+#define PIN_ANN 15
+#define PIN_GEN 14
+#define PIN_STROBE  11
 
 #define ON(b)       BIT(b)
 #define OFF(b)      BIT((b) + 16)
@@ -39,7 +40,6 @@
 #define CXB_END     DRIVE_OFF(DRV_EN_12)
 #define CYA_END     DRIVE_OFF(DRV_EN_34)
 #define CYB_END     DRIVE_OFF(DRV_EN_34)
-#define PIN_STROBE  12
 
 #define XD  -3
 #define YD  -3
