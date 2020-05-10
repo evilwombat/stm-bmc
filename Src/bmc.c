@@ -10,8 +10,11 @@
 
 #define PIN_SAFETY  9
 
-#define PIN_ANN 15
-#define PIN_GEN 14
+#define PIN_ANN     15
+#define PIN_GEN     14
+#define PIN_XIN     13
+#define PIN_XOUT    12
+
 #define PIN_STROBE  11
 
 #define ON(b)       BIT(b)
@@ -89,7 +92,7 @@ static void generate_function_timings(uint32_t *seq, int func)
     int pos = 0;
     int cxb_edge = 0;
 
-    seq[pos] =  ON(PIN_GEN) | ON(PIN_ANN) | DRIVE_IDLE;
+    seq[pos] =  ON(PIN_GEN) | ON(PIN_ANN) | ON(PIN_XIN) | ON(PIN_XOUT) | DRIVE_IDLE;
     pos += 10;
 
     YA
@@ -194,6 +197,8 @@ void safe_drive()
     GPIOB->ODR |= BIT(PIN_SAFETY);
     GPIOB->ODR |= BIT(PIN_GEN);
     GPIOB->ODR |= BIT(PIN_ANN);
+    GPIOB->ODR |= BIT(PIN_XIN);
+    GPIOB->ODR |= BIT(PIN_XOUT);
 
     GPIOB->ODR &= ~BIT(DRV_EN_12);
     GPIOB->ODR &= ~BIT(DRV_EN_34);
