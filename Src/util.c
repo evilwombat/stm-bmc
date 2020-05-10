@@ -10,12 +10,21 @@ void uart_printf(const char *fmt, ...)
 {
     char buffer[256];
     int len;
+    int i;
     va_list args;
     va_start(args, fmt);
     len = vsnprintf(buffer, 256, fmt, args);
     va_end(args);
 
-    HAL_UART_Transmit(&huart1, (unsigned char *) buffer, len, -1);
+    for (i = 0; i < len; i++) {
+        unsigned char c = buffer[i];
+        HAL_UART_Transmit(&huart1, &c, 1, -1);
+
+        if (c == '\n') {
+            c = '\r';
+            HAL_UART_Transmit(&huart1, &c, 1, -1);
+        }
+    }
 }
 
 void counter_init()
