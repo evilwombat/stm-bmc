@@ -33,7 +33,6 @@ int app_main(void)
     counter_init();
     uart_printf("Initializing function sequencer\n");
     sequencer_init();
-    uint64_t state = 0;
 
     uint8_t write_buf[BITBUFFER_SIZE];
     uint8_t read_buf[BITBUFFER_SIZE];
@@ -49,8 +48,8 @@ int app_main(void)
     write_buf[2] = 0xAA;
     write_buf[3] = 0x55;
 
-//    uart_printf("Waiting for drive safety switch\n");
-//    HAL_Delay(3000);
+    uart_printf("Waiting for drive safety switch\n");
+    HAL_Delay(3000);
     uart_printf("Okay, here we go.\n");
 
     int gen_length = 12 * 8;
@@ -61,17 +60,18 @@ int app_main(void)
         purge_major_loop();
 
         uart_printf("Generating bubbles\n");
-        generate_bubbles(write_buf, gen_length);
+//        generate_bubbles(write_buf, gen_length);
+        generate_bubbles_and_align(write_buf, gen_length);
 
         __enable_irq();
         HAL_Delay(100);
         __disable_irq();
 
-        step_bubbles(641);
-        step_bubbles(641);
-
         uart_printf("Pushing bubbles to detector via annihilation gate\n");
-        step_bubbles((120 - 1) * 2 - 19);
+//        step_bubbles((120 - 1) * 2 - 19);
+
+        step_bubbles(2);
+        step_bubbles(XFER_GATE_TO_DET);
 
         memset(read_buf, 0, sizeof(read_buf));
     
@@ -86,8 +86,8 @@ int app_main(void)
         uart_printf("Raw read buffer:\n");
         dump_buffer(read_buf, 20);
     
-        uart_printf("Done\n");
-        uart_printf("\n\n");
+//        uart_printf("Done\n");
+//        uart_printf("\n\n");
 
         __enable_irq();
         HAL_Delay(500);

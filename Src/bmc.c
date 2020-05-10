@@ -133,8 +133,10 @@ void generate_bubbles(const uint8_t *data, int count)
     }
 }
 
-void generate_bubbles_and_align(const uint8_t *data, int count) {
-    int steps_taken = count * 2;
+void generate_bubbles_and_align(const uint8_t *data, int count)
+{
+    if (count * 2 > GEN_TO_XFER_GATE)
+        count = GEN_TO_XFER_GATE / 2;
 
     generate_bubbles(data, count);
 
@@ -142,7 +144,7 @@ void generate_bubbles_and_align(const uint8_t *data, int count) {
      * (well, actually, technically 298? since we insert a blank spot after every potential generate cycle)
      */
 
-    
+    step_bubbles(GEN_TO_XFER_GATE - count * 2);
 }
 
 void read_bubbles(uint8_t *data, int count)

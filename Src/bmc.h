@@ -19,3 +19,17 @@ void unsafe_drive();
  * passing over the detectors.
  */
 #define DETECTOR_PRERUN_LEN 19
+
+#define GEN_TO_XFER_GATE    342
+
+/* We assume that "Transfer" is a two-cycle operation */
+#define XFER_GATE_TO_DET    66
+
+void generate_bubbles(const uint8_t *data, int count);
+void generate_bubbles_and_align(const uint8_t *data, int count);
+void read_bubbles(uint8_t *data, int count);
+void repeat_func(int steps, int func);
+void step_bubbles(int steps);
+void purge_major_loop();
+void safe_drive();
+void unsafe_drive();
