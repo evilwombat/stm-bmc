@@ -122,25 +122,38 @@ int run_function(int func)
 void generate_bubbles(const uint8_t *data, int count)
 {
     int i;
-//    uart_printf("Generate\n");
     for (i = 0; i < count; i++) {
         if (get_bit(data, i)) {
-//            uart_printf("1");
             run_function(FUNC_GEN);
         } else {
-//            uart_printf("0");
             run_function(0);
         }
 
         run_function(0);
     }
+}
 
-//    uart_printf("\n");
+void generate_bubbles_and_align(const uint8_t *data, int count) {
+    int steps_taken = count * 2;
+
+    generate_bubbles(data, count);
+
+    /* The last bubble we generated will be at position 297
+     * (well, actually, technically 298? since we insert a blank spot after every potential generate cycle)
+     */
+
+    
 }
 
 void read_bubbles(uint8_t *data, int count)
 {
     int i, bit, func;
+
+    /* Pre-run the detector track.
+     * We begin reading from bubble position 68.
+     */
+    repeat_func(DETECTOR_PRERUN_LEN, FUNC_ANN);
+
     for (i = 0; i < count; i++) {
         
         func = FUNC_ANN;

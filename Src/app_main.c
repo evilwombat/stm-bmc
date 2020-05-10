@@ -44,9 +44,16 @@ int app_main(void)
 
     memcpy(write_buf, "HELLO WORLD\0\0\0\0\0", 16);
 
+    write_buf[0] = 0xFF;
+    write_buf[1] = 0x00;
+    write_buf[2] = 0xAA;
+    write_buf[3] = 0x55;
+
 //    uart_printf("Waiting for drive safety switch\n");
 //    HAL_Delay(3000);
     uart_printf("Okay, here we go.\n");
+
+    int gen_length = 12 * 8;
 
     while(1) {
         __disable_irq();
@@ -54,14 +61,17 @@ int app_main(void)
         purge_major_loop();
 
         uart_printf("Generating bubbles\n");
-        generate_bubbles(write_buf, 12 * 8);
+        generate_bubbles(write_buf, gen_length);
 
         __enable_irq();
         HAL_Delay(100);
         __disable_irq();
 
+        step_bubbles(641);
+        step_bubbles(641);
+
         uart_printf("Pushing bubbles to detector via annihilation gate\n");
-        repeat_func((120 - 1) * 2, FUNC_ANN);
+        step_bubbles((120 - 1) * 2 - 19);
 
         memset(read_buf, 0, sizeof(read_buf));
     
