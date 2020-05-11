@@ -87,6 +87,23 @@
         seq[pos + 14 + 19 + AO + 2] |= ON(PIN_ANN);  \
     }
 
+
+#define XIO     -2
+#define XOO     -2
+
+#define XIN                                         \
+    if (func & FUNC_XIN) {                          \
+        seq[pos + 19 + XIO] |= OFF(PIN_XIN);        \
+        seq[pos + 19 + 10 + XIO] |= ON(PIN_XIN);  \
+    }
+
+#define XOUT                                        \
+    if (func & FUNC_XOUT) {                         \
+        seq[pos + 4 + XOO] |= OFF(PIN_XOUT);       \
+        seq[pos + 4 + 7 + XOO] |= ON(PIN_XOUT);  \
+    }
+
+
 static void generate_function_timings(uint32_t *seq, int func)
 {
     int pos = 0;
@@ -96,7 +113,7 @@ static void generate_function_timings(uint32_t *seq, int func)
     pos += 10;
 
     YA
-    GEN; ANN
+    GEN; ANN; XIN; XOUT;
     XB
     YB
     XA
@@ -208,4 +225,9 @@ void unsafe_drive()
 {
     safe_drive();
     GPIOB->ODR &= ~BIT(PIN_SAFETY);
+}
+
+int drive_power_state()
+{
+    return !!(GPIOA->IDR & BIT(15));
 }

@@ -10,6 +10,8 @@ void unsafe_drive();
 #define FUNC_GEN    BIT(0)
 #define FUNC_ANN    BIT(1)
 #define FUNC_STR    BIT(2)
+#define FUNC_XIN    BIT(3)
+#define FUNC_XOUT   BIT(4)
 
 /* The datasheet in the Develco report claims this is 640? */
 #define MAJOR_LOOP_LEN  641
@@ -33,3 +35,5 @@ void step_bubbles(int steps);
 void purge_major_loop();
 void safe_drive();
 void unsafe_drive();
+
+int drive_power_state();
