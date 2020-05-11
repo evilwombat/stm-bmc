@@ -80,10 +80,7 @@ void sequencer_run(const uint32_t *seq, int len)
     __HAL_TIM_ENABLE(&htimer2);
 
     int i = 0;
-/*    for (i  = 0; i < 10000000; i++) {
-        asm __volatile__("nop");
-    }
-*/
+
     /* Wait for DMA to complete */
     while(!(DMA1->ISR & DMA_ISR_TCIF2));
 

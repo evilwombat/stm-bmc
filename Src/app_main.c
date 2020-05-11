@@ -22,17 +22,6 @@
 #include "sequencer.h"
 #include "util.h"
 
-void tune_transfer()
-{
-    while(1) {
-        run_function(FUNC_XOUT);
-
-        __enable_irq();
-        HAL_Delay(100);
-        __disable_irq();
-    }
-}
-
 void wait_for_drive()
 {
     if (drive_power_state()) {
@@ -52,22 +41,180 @@ void wait_for_drive()
         HAL_Delay(100);
 
         if (drive_power_state()) {
-            uart_printf("Okay, here we go.\n");
+            uart_printf("Drive powered on. Okay, here we go.\n");
             return;
         }
+    }
+}
+
+extern int xff;
+
+
+
+void try_xout() 
+{
+    int iter = 0;
+    int i, found;
+
+    uint8_t read_buf[BITBUFFER_SIZE];
+
+    while(1) {
+        __disable_irq();
+
+        if (!drive_power_state()) {
+            uart_printf("Drive is off...\n");
+            while(!drive_power_state());
+        }
+
+        purge_major_loop();
+    
+        uart_printf("Iteration %d:  ", iter);
+
+        run_function(FUNC_XOUT);
+        step_bubbles(1);
+        step_bubbles(iter);
+
+        memset(read_buf, 0, sizeof(read_buf));    
+        read_bubbles(read_buf, sizeof(read_buf));
+
+        found = 0;
+        for (i = 0; i < BITBUFFER_SIZE; i++) {
+            if (read_buf[i])
+                found = 1;
+        }
+
+        if (found) {
+            dump_buffer(read_buf, BITBUFFER_SIZE);
+        } else {
+            uart_printf("nothing\n");
+        }
+
+        __enable_irq();
+        HAL_Delay(10);
+        __disable_irq();
+        iter++;
+    }
+}
+
+
+void try_find_loops() 
+{
+    int iter = 0;
+    int i, found, loops = 0;
+
+    uint8_t read_buf[BITBUFFER_SIZE];
+
+    while(1) {
+        __disable_irq();
+
+        if (!drive_power_state()) {
+            uart_printf("Drive is off...\n");
+            while(!drive_power_state());
+        }
+
+        purge_major_loop();
+    
+        uart_printf("%d steps after generation: ", iter);
+
+        run_function(FUNC_GEN);
+        run_function(0);
+
+        step_bubbles(iter);
+        run_function(FUNC_XIN);
+
+        memset(read_buf, 0, sizeof(read_buf));
+
+        read_bubbles(read_buf, sizeof(read_buf));
+
+        found = 0;
+        for (i = 0; i < BITBUFFER_SIZE; i++) {
+            if (read_buf[i])
+                found++;
+        }
+
+        if (found) {
+            uart_printf("got %d bubble bytes\n", found);
+        } else {
+            uart_printf("nothing!! There must be a minor loop %d steps after generator. Loops so far: %d\n", iter, loops);
+
+            loops++;
+        }
+
+        __enable_irq();
+        HAL_Delay(10);
+        __disable_irq();
+        iter++;
+    }
+}
+
+void try_xin()
+{
+    uint8_t write_buf[BITBUFFER_SIZE];
+    uint8_t read_buf[BITBUFFER_SIZE];
+    int gen_length = 1 * 8;
+    memset(write_buf, 0, sizeof(write_buf));
+    write_buf[0] = 0xF0;
+
+    xff = 300;
+
+    while(1) {
+        __disable_irq();
+//        uart_printf("Purging major loop and detector track\n");
+        purge_major_loop();
+    
+        uart_printf("Fudge factor is %d\n", xff);
+
+//        uart_printf("Generating bubbles\n");
+        generate_bubbles_and_align(write_buf, gen_length);
+
+        __enable_irq();
+        HAL_Delay(100);
+        __disable_irq();
+
+//        uart_printf("Pushing bubbles to detector via annihilation gate\n");
+
+        run_function(FUNC_XIN);
+        step_bubbles(1);
+
+        step_bubbles(XFER_GATE_TO_DET);
+
+        memset(read_buf, 0, sizeof(read_buf));
+    
+//        uart_printf("Reading bubbles via annihilation gate\n");
+        read_bubbles(read_buf, sizeof(read_buf));
+
+/*
+        uart_printf("Read data from major loop: <");
+        for (i = 0; i < 20; i++)
+            uart_printf("%c", read_buf[i]);
+        uart_printf(">\n");
+*/
+        uart_printf("Raw read buffer:\n");
+        dump_buffer(read_buf, 20);
+    
+//        uart_printf("Done\n");
+//        uart_printf("\n\n");
+
+        __enable_irq();
+        HAL_Delay(250);
+        __disable_irq();
+        xff++;
+
+//        while(1);
     }
 }
 
 int app_main(void)
 {
     int i;
+    xff = 0;
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("Start\n");
     __enable_irq();
     HAL_Delay(200);
 
     counter_init();
-    uart_printf("Initializing function sequencer\n");
+    uart_printf("Setting up function sequencer DMA\n");
     sequencer_init();
 
     uint8_t write_buf[BITBUFFER_SIZE];
@@ -78,133 +225,61 @@ int app_main(void)
     memset(read_buf, 0, sizeof(read_buf));
 
     memcpy(write_buf, "HELLO WORLD\0\0\0\0\0", 16);
-
+/*
     write_buf[0] = 0xFF;
     write_buf[1] = 0x00;
     write_buf[2] = 0xAA;
     write_buf[3] = 0x55;
-
-
+*/
     wait_for_drive();
 
     int gen_length = 12 * 8;
+
+//    try_xout();
+//    try_find_loops();
+
+
+    xff = 0;
 
     while(1) {
         __disable_irq();
         uart_printf("Purging major loop and detector track\n");
         purge_major_loop();
-
-        uart_printf("Generating bubbles\n");
+  
+        uart_printf("Generating bubbles in major loop\n");
         generate_bubbles_and_align(write_buf, gen_length);
 
         __enable_irq();
         HAL_Delay(100);
         __disable_irq();
 
-        uart_printf("Pushing bubbles to detector via annihilation gate\n");
-
+        uart_printf("Skipping over the transfer gate??\n");
         step_bubbles(2);
         step_bubbles(XFER_GATE_TO_DET);
 
+        uart_printf("Pushing bubbles to detector via annihilation gate\n");
         memset(read_buf, 0, sizeof(read_buf));
     
         uart_printf("Reading bubbles via annihilation gate\n");
         read_bubbles(read_buf, sizeof(read_buf));
+
+        uart_printf("Raw read buffer:\n");
+        dump_buffer(read_buf, 20);
 
         uart_printf("Read data from major loop: <");
         for (i = 0; i < 20; i++)
             uart_printf("%c", read_buf[i]);
         uart_printf(">\n");
 
-        uart_printf("Raw read buffer:\n");
-        dump_buffer(read_buf, 20);
     
+//        while(1);
 //        uart_printf("Done\n");
 //        uart_printf("\n\n");
 
         __enable_irq();
-        HAL_Delay(500);
+        HAL_Delay(250);
         __disable_irq();
     }
 
-#if 0
-    while(1) {
-        __disable_irq();
-
-   //     uart_printf("Sequencer run\n"); //: %04x %d\n", GPIOA->IDR, TIM1->CNT);
-        int bp = 0;
-
-        for (i = 0; i < 700; i++) {
-            int bit = 0;
-            int pos = i - 250;
-        
-            if (pos >= 0 && pos % 4 == 0) {
-                if (bp < 700) {
-                    bit = state & (1 << bp);
-                    bit = get_bit("HELLO WORLD\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", bp);
-                }
-                bp++;
-            }
-
-            generate_timings(bit, 0);
-            unsafe_drive();
-            sequencer_run(seq, sizeof(seq) / sizeof(*seq));
-            safe_drive();
-        }
-
-        state++;
-
-        __enable_irq();
-        HAL_Delay(5);
-        __disable_irq();
-        
-        uint8_t result[200];
-        memset(result, 0, sizeof(result));
-        counter_reset();
-        for (i = 0; i < 700; i++) {
-            generate_timings(0, i == 0);
-            unsafe_drive();
-            sequencer_run(seq, sizeof(seq) / sizeof(*seq));
-            safe_drive();
-
-            if (i % 4 == 3) {
-                set_bit(result, i / 4, counter_read());
-                counter_reset();
-            }
-        }
-        __enable_irq();
-
-     //   uart_printf("Read back:\n");
-        for (i = 0; i < 40; i++) {
-            uart_printf("%02x ", result[i]);
-        }
-        uart_printf("\n");
-
-/*        HAL_Delay(600);
-        __disable_irq();
-        for (i = 0; i < 700; i++) {
-            generate_timings(0, 0);
-            unsafe_drive();
-            sequencer_run(seq, sizeof(seq) / sizeof(*seq));
-            safe_drive();
-        }
-        __enable_irq();
-        HAL_Delay(5);
-        __disable_irq();
-        for (i = 0; i < 100; i++) {
-            generate_timings(0, 1);
-            unsafe_drive();
-            sequencer_run(seq, sizeof(seq) / sizeof(*seq));
-            safe_drive();
-        }
-        __enable_irq();
-    */
-        HAL_Delay(100);
-        __disable_irq();
-
-        __enable_irq();
-
-    }
-#endif
     while(1);
 }

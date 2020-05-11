@@ -1,7 +1,7 @@
 #include "bmc.h"
 #include <string.h>
 
-#define SEQ_SIZE    400
+#define SEQ_SIZE    200
 
 #define A   BIT(5)
 #define B   BIT(6)
@@ -152,6 +152,8 @@ void generate_bubbles(const uint8_t *data, int count)
         run_function(0);
     }
 }
+
+int xff;
 
 void generate_bubbles_and_align(const uint8_t *data, int count)
 {
