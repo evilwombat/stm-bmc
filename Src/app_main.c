@@ -22,6 +22,42 @@
 #include "sequencer.h"
 #include "util.h"
 
+void tune_transfer()
+{
+    while(1) {
+        run_function(FUNC_XOUT);
+
+        __enable_irq();
+        HAL_Delay(100);
+        __disable_irq();
+    }
+}
+
+void wait_for_drive()
+{
+    if (drive_power_state()) {
+        safe_drive();
+        while(1) {
+            uart_printf("YOU BOOTED UP WITH THE DRIVE ENABLED?! YOU IDIOT.\n");
+            HAL_Delay(100);
+        }
+    }
+
+    uart_printf("Waiting for drive safety switch\n");
+
+    while(1) {
+        while (!drive_power_state());
+
+        /* Lazy debouncing */
+        HAL_Delay(100);
+
+        if (drive_power_state()) {
+            uart_printf("Okay, here we go.\n");
+            return;
+        }
+    }
+}
+
 int app_main(void)
 {
     int i;
@@ -48,9 +84,8 @@ int app_main(void)
     write_buf[2] = 0xAA;
     write_buf[3] = 0x55;
 
-    uart_printf("Waiting for drive safety switch\n");
-    HAL_Delay(3000);
-    uart_printf("Okay, here we go.\n");
+
+    wait_for_drive();
 
     int gen_length = 12 * 8;
 
@@ -60,7 +95,6 @@ int app_main(void)
         purge_major_loop();
 
         uart_printf("Generating bubbles\n");
-//        generate_bubbles(write_buf, gen_length);
         generate_bubbles_and_align(write_buf, gen_length);
 
         __enable_irq();
@@ -68,7 +102,6 @@ int app_main(void)
         __disable_irq();
 
         uart_printf("Pushing bubbles to detector via annihilation gate\n");
-//        step_bubbles((120 - 1) * 2 - 19);
 
         step_bubbles(2);
         step_bubbles(XFER_GATE_TO_DET);
