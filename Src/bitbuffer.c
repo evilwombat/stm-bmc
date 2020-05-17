@@ -21,6 +21,18 @@ void set_bit(uint8_t* data, int pos, int val)
 void dump_buffer(uint8_t* data, int len)
 {
     int i;
+    int found = 0;
+
+    for (i = 0; i < len; i++) {
+        if (data[i])
+            found = 1;
+    }
+
+    if (!found) {
+        uart_printf("nothing\n");
+        return;
+    }
+
     for (i = 0; i < len; i++) {
         uart_printf("%02x ", data[i]);
     }

@@ -115,10 +115,13 @@ static void generate_function_timings(uint32_t *seq, int func)
     seq[pos] =  ON(PIN_GEN) | ON(PIN_ANN) | ON(PIN_XIN) | ON(PIN_XOUT) | DRIVE_IDLE;
     pos += 10;
 
+    XIN
     YA
-    GEN; ANN; XIN; XOUT;
+    GEN; ANN;
+//    XIN; XOUT;
     XB
     YB
+    XOUT;
     XA
     YA
 
@@ -138,7 +141,8 @@ static void generate_function_timings_2x(uint32_t *seq, int func)
     pos += 10;
 
     YA
-    GEN; ANN; XIN; XOUT;
+    GEN; ANN;
+   // XIN; XOUT;
     XB
     YB
     XA
@@ -192,8 +196,10 @@ void generate_bubbles(const uint8_t *data, int count)
     for (i = 0; i < count; i++) {
         if (get_bit(data, i)) {
             run_function(FUNC_GEN);
+//            run_function(FUNC_GEN);
         } else {
             run_function(0);
+//            run_function(0);
         }
 
         run_function(0);
@@ -213,7 +219,7 @@ void generate_bubbles_and_align(const uint8_t *data, int count)
      * (well, actually, technically 298? since we insert a blank spot after every potential generate cycle)
      */
 
-    step_bubbles(GEN_TO_XFER_GATE - count * 2 - xff);
+    step_bubbles(GEN_TO_XFER_GATE - count * 2);
 }
 
 void read_bubbles(uint8_t *data, int count)
@@ -310,10 +316,11 @@ void seek_by(int count)
 
 void seek_to(int pos)
 {
-    if (pos < 0 || pos >= MINOR_LOOP_LEN) {
-        uart_printf("Invalid seek target: %d\n", pos);
-        return;
-    }
+    while (pos >= MINOR_LOOP_LEN)
+        pos -= MINOR_LOOP_LEN;
+
+    while (pos < 0)
+        pos += MINOR_LOOP_LEN;
 
     while (minor_loop_position != pos)
         step_bubbles(1);
