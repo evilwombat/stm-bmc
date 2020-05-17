@@ -314,14 +314,14 @@ void read_block(int read_target, int show)
 {
     uint8_t read_buf[BITBUFFER_SIZE];
     __disable_irq();
-    purge_major_loop();
+ //   purge_major_loop();
     seek_to(read_target * 2);
     if (show)
         uart_printf("Read %3d: ", get_loop_position());
 
     step_bubbles(1);
+//    run_function(FUNC_XOUT);
     run_function(FUNC_XOUT);
-//        run_function(FUNC_XOUT);
 
     step_bubbles(XFER_GATE_TO_DET);
 
@@ -342,7 +342,7 @@ void write_block(int write_target)
 
     read_block(write_target, 0);
 
-    purge_major_loop();
+//    purge_major_loop();
     uart_printf("Write to %3d: ", write_target);
 
     write_buf[0] = 0xff;
@@ -354,10 +354,13 @@ void write_block(int write_target)
     write_buf[6] = write_target;
     write_buf[7] = write_target;
     write_buf[8] = write_target;
+    write_buf[9] = 0x00;
+    write_buf[10] = 0x02;
 
     seek_to(write_target * 2 - GEN_TO_XFER_GATE);
     generate_bubbles_and_align(write_buf, gen_length);
 
+//    run_function(FUNC_XIN);
     step_bubbles(1);
     run_function(FUNC_XIN);
 //        run_function(FUNC_XIN);
@@ -377,23 +380,26 @@ void try_transfer()
     int read_target = 0;
 
     uart_printf("\n\nWriting...\n");
-    while(write_target < 20) {
+    while(write_target < 10) {
         write_block(write_target);
         write_target++;
         check_drive_state();
     }
 
     uart_printf("\n\nReading...\n");
-    while(read_target < 20) {
+    while(read_target < 10) {
         read_block(read_target, 1);
 
         read_target++;
         check_drive_state();
     }
 
-
+    uart_printf(".\n");
     __enable_irq();
-    HAL_Delay(500);
+    check_drive_state();
+    HAL_Delay(2000);
+    check_drive_state();
+
     __disable_irq();
     
 }
@@ -415,11 +421,11 @@ int app_main(void)
 
     wait_for_drive();
 
-    test_hello();
 
     while(1)
         try_transfer();
 
+    test_hello();
 //    test_hello();
 //    try_xin_all();
 //     try_xin();
