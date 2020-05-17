@@ -94,16 +94,22 @@ static int minor_loop_position = 0;
 #define XIO     -2
 #define XOO     -2
 
+#define XIP     0
+#define XIL     14
+
+#define XOP     19
+#define XOL     11
+
 #define XIN                                         \
     if (func & FUNC_XIN) {                          \
-        seq[pos + 19 + XIO] |= OFF(PIN_XIN);        \
-        seq[pos + 19 + 10 + XIO] |= ON(PIN_XIN);  \
+        seq[pos + XIP + XIO] |= OFF(PIN_XIN);        \
+        seq[pos + XIP + XIL + XIO] |= ON(PIN_XIN);  \
     }
 
 #define XOUT                                        \
     if (func & FUNC_XOUT) {                         \
-        seq[pos + 4 + XOO] |= OFF(PIN_XOUT);       \
-        seq[pos + 4 + 7 + XOO] |= ON(PIN_XOUT);  \
+        seq[pos + XOP + XOO] |= OFF(PIN_XOUT);       \
+        seq[pos + XOP + XOL + XOO] |= ON(PIN_XOUT);  \
     }
 
 
@@ -115,13 +121,11 @@ static void generate_function_timings(uint32_t *seq, int func)
     seq[pos] =  ON(PIN_GEN) | ON(PIN_ANN) | ON(PIN_XIN) | ON(PIN_XOUT) | DRIVE_IDLE;
     pos += 10;
 
-    XIN
     YA
-    GEN; ANN;
-//    XIN; XOUT;
+    GEN; ANN; XIN; XOUT
     XB
     YB
-    XOUT;
+//    XOUT;
     XA
     YA
 

@@ -315,12 +315,12 @@ void read_block(int read_target, int show)
     uint8_t read_buf[BITBUFFER_SIZE];
     __disable_irq();
  //   purge_major_loop();
-    seek_to(read_target * 2);
+    seek_to(read_target);
     if (show)
         uart_printf("Read %3d: ", get_loop_position());
 
-    step_bubbles(1);
 //    run_function(FUNC_XOUT);
+    step_bubbles(1);
     run_function(FUNC_XOUT);
 
     step_bubbles(XFER_GATE_TO_DET);
@@ -356,8 +356,9 @@ void write_block(int write_target)
     write_buf[8] = write_target;
     write_buf[9] = 0x00;
     write_buf[10] = 0x02;
+    write_buf[11] = write_target;
 
-    seek_to(write_target * 2 - GEN_TO_XFER_GATE);
+    seek_to(write_target - GEN_TO_XFER_GATE);
     generate_bubbles_and_align(write_buf, gen_length);
 
 //    run_function(FUNC_XIN);
@@ -380,15 +381,15 @@ void try_transfer()
     int read_target = 0;
 
     uart_printf("\n\nWriting...\n");
-    while(write_target < 10) {
-        write_block(write_target);
+    while(write_target < 16) {
+        write_block(write_target + 0xF0);
         write_target++;
         check_drive_state();
     }
 
     uart_printf("\n\nReading...\n");
-    while(read_target < 10) {
-        read_block(read_target, 1);
+    while(read_target < 16) {
+        read_block(read_target + 0xF0, 1);
 
         read_target++;
         check_drive_state();
