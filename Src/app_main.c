@@ -310,70 +310,82 @@ void test_hello()
     }
 }
 
+void read_block(int read_target, int show)
+{
+    uint8_t read_buf[BITBUFFER_SIZE];
+    __disable_irq();
+    purge_major_loop();
+    seek_to(read_target * 2);
+    if (show)
+        uart_printf("Read %3d: ", get_loop_position());
+
+    step_bubbles(1);
+    run_function(FUNC_XOUT);
+//        run_function(FUNC_XOUT);
+
+    step_bubbles(XFER_GATE_TO_DET);
+
+    memset(read_buf, 0, sizeof(read_buf));
+    read_bubbles(read_buf, sizeof(read_buf) * 8);
+
+    if (show)
+        dump_buffer(read_buf, 30);
+    seek_to(0);
+}
+
+void write_block(int write_target) 
+{
+    uint8_t read_buf[BITBUFFER_SIZE];
+    uint8_t write_buf[BITBUFFER_SIZE];
+    int gen_length = 120;
+    memset(write_buf, 0, sizeof(write_buf));
+
+    read_block(write_target, 0);
+
+    purge_major_loop();
+    uart_printf("Write to %3d: ", write_target);
+
+    write_buf[0] = 0xff;
+    write_buf[1] = 0xff;
+    write_buf[2] = 0x00;
+    write_buf[3] = 0x55;
+    write_buf[4] = 0xAA;
+    write_buf[5] = write_target;
+    write_buf[6] = write_target;
+    write_buf[7] = write_target;
+    write_buf[8] = write_target;
+
+    seek_to(write_target * 2 - GEN_TO_XFER_GATE);
+    generate_bubbles_and_align(write_buf, gen_length);
+
+    step_bubbles(1);
+    run_function(FUNC_XIN);
+//        run_function(FUNC_XIN);
+
+    step_bubbles(XFER_GATE_TO_DET);
+    memset(read_buf, 0, sizeof(read_buf));
+
+    read_bubbles(read_buf, sizeof(read_buf) * 8);
+    dump_buffer(read_buf, 20);
+
+    seek_to(0);
+}
+
 void try_transfer()
 {
-    uint8_t write_buf[BITBUFFER_SIZE];
-    uint8_t read_buf[BITBUFFER_SIZE];
-    int gen_length = 120;
-    memset(write_buf, 0xff, sizeof(write_buf));
-
     int write_target = 0;
     int read_target = 0;
 
     uart_printf("\n\nWriting...\n");
     while(write_target < 20) {
-        __disable_irq();
-       // purge_major_loop();
-        uart_printf("Write to %3d: ", write_target);
-
-        write_buf[2] = 0x00;
-        write_buf[3] = 0x55;
-        write_buf[4] = 0xAA;
-        write_buf[5] = write_target;
-
-        seek_to(write_target - GEN_TO_XFER_GATE);
-        generate_bubbles_and_align(write_buf, gen_length);
-
-
-        step_bubbles(1);
-        run_function(FUNC_XIN);
-//        run_function(FUNC_XIN);
-
-        step_bubbles(XFER_GATE_TO_DET);
-        memset(read_buf, 0, sizeof(read_buf));
-    
-        read_bubbles(read_buf, sizeof(read_buf) * 8);
-        dump_buffer(read_buf, 20);
-
-        seek_to(0);
-
-//        __enable_irq();
-//        HAL_Delay(100);
-//        __disable_irq();
-
+        write_block(write_target);
         write_target++;
         check_drive_state();
     }
 
     uart_printf("\n\nReading...\n");
     while(read_target < 20) {
-        __disable_irq();
-        purge_major_loop();
-        seek_to(read_target);
-        uart_printf("Read %3d: ", get_loop_position());
-
-        step_bubbles(1);
-        run_function(FUNC_XOUT);
-//        run_function(FUNC_XOUT);
-
-        step_bubbles(XFER_GATE_TO_DET);
-
-        memset(read_buf, 0, sizeof(read_buf));
-        read_bubbles(read_buf, sizeof(read_buf) * 8);
-
-        dump_buffer(read_buf, 30);
-        seek_to(0);
-
+        read_block(read_target, 1);
 
         read_target++;
         check_drive_state();
@@ -403,10 +415,12 @@ int app_main(void)
 
     wait_for_drive();
 
+    test_hello();
+
     while(1)
         try_transfer();
 
-    test_hello();
+//    test_hello();
 //    try_xin_all();
 //     try_xin();
 //    try_xout();
