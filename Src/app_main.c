@@ -57,6 +57,7 @@ void try_xout()
     int i, found;
 
     uint8_t read_buf[BITBUFFER_SIZE];
+    xff = 0;
 
     while(1) {
         __disable_irq();
@@ -66,16 +67,14 @@ void try_xout()
             while(!drive_power_state());
         }
 
-        purge_major_loop();
+    //    purge_major_loop();
     
         uart_printf("Iteration %d:  ", iter);
 
         run_function(FUNC_XOUT);
-        step_bubbles(1);
-        step_bubbles(iter);
 
         memset(read_buf, 0, sizeof(read_buf));    
-        read_bubbles(read_buf, sizeof(read_buf));
+        read_bubbles(read_buf, sizeof(read_buf) * 8);
 
         found = 0;
         for (i = 0; i < BITBUFFER_SIZE; i++) {
@@ -117,14 +116,13 @@ void try_find_loops()
         uart_printf("%d steps after generation: ", iter);
 
         run_function(FUNC_GEN);
-        run_function(0);
 
         step_bubbles(iter);
-        run_function(FUNC_XIN);
+        run_function_2x(FUNC_XIN);
 
         memset(read_buf, 0, sizeof(read_buf));
 
-        read_bubbles(read_buf, sizeof(read_buf));
+        read_bubbles(read_buf, sizeof(read_buf) * 8);
 
         found = 0;
         for (i = 0; i < BITBUFFER_SIZE; i++) {
@@ -153,16 +151,21 @@ void try_xin()
     uint8_t read_buf[BITBUFFER_SIZE];
     int gen_length = 1 * 8;
     memset(write_buf, 0, sizeof(write_buf));
-    write_buf[0] = 0xF0;
+    write_buf[0] = 0xFF;
+    write_buf[1] = 0xFF;
+    write_buf[2] = 0xFF;
+    write_buf[3] = 0xFF;
 
     xff = 300;
+
+    xff = 0;
 
     while(1) {
         __disable_irq();
 //        uart_printf("Purging major loop and detector track\n");
         purge_major_loop();
     
-        uart_printf("Fudge factor is %d\n", xff);
+        uart_printf("Fudge factor is %3d - ", xff);
 
 //        uart_printf("Generating bubbles\n");
         generate_bubbles_and_align(write_buf, gen_length);
@@ -173,23 +176,15 @@ void try_xin()
 
 //        uart_printf("Pushing bubbles to detector via annihilation gate\n");
 
-        run_function(FUNC_XIN);
-        step_bubbles(1);
+        run_function_2x(FUNC_XIN);
 
         step_bubbles(XFER_GATE_TO_DET);
 
         memset(read_buf, 0, sizeof(read_buf));
     
 //        uart_printf("Reading bubbles via annihilation gate\n");
-        read_bubbles(read_buf, sizeof(read_buf));
+        read_bubbles(read_buf, sizeof(read_buf) * 8);
 
-/*
-        uart_printf("Read data from major loop: <");
-        for (i = 0; i < 20; i++)
-            uart_printf("%c", read_buf[i]);
-        uart_printf(">\n");
-*/
-        uart_printf("Raw read buffer:\n");
         dump_buffer(read_buf, 20);
     
 //        uart_printf("Done\n");
@@ -204,19 +199,50 @@ void try_xin()
     }
 }
 
-int app_main(void)
+
+
+void try_xin_all() 
+{
+    int iter = 0;
+    int i, found;
+
+    uint8_t read_buf[BITBUFFER_SIZE];
+    xff = 0;
+
+    while(1) {
+        __disable_irq();
+
+        if (!drive_power_state()) {
+            uart_printf("Drive is off...\n");
+            while(!drive_power_state());
+        }
+
+        purge_major_loop();
+    
+        for (i = 0; i < 320; i++) {
+            run_function(FUNC_GEN);
+            step_bubbles(1);
+        }
+
+        step_bubbles(1);
+
+        run_function_2x(FUNC_XIN);
+
+        memset(read_buf, 0, sizeof(read_buf));    
+        read_bubbles(read_buf, sizeof(read_buf) * 8);
+
+        dump_buffer(read_buf, BITBUFFER_SIZE);
+
+        __enable_irq();
+        HAL_Delay(10);
+        __disable_irq();
+        iter++;
+    }
+}
+
+void test_hello()
 {
     int i;
-    xff = 0;
-    uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    uart_printf("Start\n");
-    __enable_irq();
-    HAL_Delay(200);
-
-    counter_init();
-    uart_printf("Setting up function sequencer DMA\n");
-    sequencer_init();
-
     uint8_t write_buf[BITBUFFER_SIZE];
     uint8_t read_buf[BITBUFFER_SIZE];
 
@@ -231,15 +257,8 @@ int app_main(void)
     write_buf[2] = 0xAA;
     write_buf[3] = 0x55;
 */
-    wait_for_drive();
 
     int gen_length = 12 * 8;
-
-//    try_xout();
-//    try_find_loops();
-
-
-    xff = 0;
 
     while(1) {
         __disable_irq();
@@ -261,7 +280,7 @@ int app_main(void)
         memset(read_buf, 0, sizeof(read_buf));
     
         uart_printf("Reading bubbles via annihilation gate\n");
-        read_bubbles(read_buf, sizeof(read_buf));
+        read_bubbles(read_buf, sizeof(read_buf) * 8);
 
         uart_printf("Raw read buffer:\n");
         dump_buffer(read_buf, 20);
@@ -279,7 +298,39 @@ int app_main(void)
         __enable_irq();
         HAL_Delay(250);
         __disable_irq();
+
+        if (!drive_power_state()) {
+            uart_printf("Drive is off...\n");
+            while(!drive_power_state());
+        }
     }
+}
+
+int app_main(void)
+{
+    int i;
+    xff = 0;
+    uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+    uart_printf("Start\n");
+    __enable_irq();
+    HAL_Delay(200);
+
+    counter_init();
+    uart_printf("Setting up function sequencer DMA\n");
+    sequencer_init();
+
+    xff = 0;
+
+    wait_for_drive();
+    test_hello();
+
+//    try_xin_all();
+//     try_xin();
+//    try_xout();
+//    try_find_loops();
+
+
+
 
     while(1);
 }

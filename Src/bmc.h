@@ -30,6 +30,7 @@ void unsafe_drive();
 void generate_bubbles(const uint8_t *data, int count);
 void generate_bubbles_and_align(const uint8_t *data, int count);
 void read_bubbles(uint8_t *data, int count);
+void read_bubbles_raw(uint8_t *data, int count);    /* Don't pre-run the detector track */
 void repeat_func(int steps, int func);
 void step_bubbles(int steps);
 void purge_major_loop();
@@ -37,3 +38,8 @@ void safe_drive();
 void unsafe_drive();
 
 int drive_power_state();
+void seek_to(int pos);
+void seek_by(int count);
+int get_loop_position();
+
+#define MINOR_LOOP_LEN  641

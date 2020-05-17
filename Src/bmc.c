@@ -1,6 +1,9 @@
 #include "bmc.h"
 #include <string.h>
 
+static void step_loop_counter();
+static int minor_loop_position = 0;
+
 #define SEQ_SIZE    200
 
 #define A   BIT(5)
@@ -125,6 +128,33 @@ static void generate_function_timings(uint32_t *seq, int func)
     }
 }
 
+
+static void generate_function_timings_2x(uint32_t *seq, int func)
+{
+    int pos = 0;
+    int cxb_edge = 0;
+
+    seq[pos] =  ON(PIN_GEN) | ON(PIN_ANN) | ON(PIN_XIN) | ON(PIN_XOUT) | DRIVE_IDLE;
+    pos += 10;
+
+    YA
+    GEN; ANN; XIN; XOUT;
+    XB
+    YB
+    XA
+    YA
+
+    XB
+    YB
+    XA
+    YA
+
+    if (func & FUNC_STR) {
+       seq[cxb_edge + 7] |= ON(PIN_STROBE);
+       seq[cxb_edge + 8 + 20] |= OFF(PIN_STROBE);
+    }
+}
+
 uint32_t seq[SEQ_SIZE];
 
 int run_function(int func)
@@ -136,6 +166,23 @@ int run_function(int func)
     unsafe_drive();
     sequencer_run(seq, SEQ_SIZE);
     safe_drive();
+
+    step_loop_counter();
+
+    return counter_read();
+}
+
+int run_function_2x(int func)
+{
+    memset(seq, 0, SEQ_SIZE);
+    counter_reset();
+    generate_function_timings_2x(seq, func);
+
+    unsafe_drive();
+    sequencer_run(seq, SEQ_SIZE);
+    safe_drive();
+    step_loop_counter();
+    step_loop_counter();
     return counter_read();
 }
 
@@ -166,17 +213,21 @@ void generate_bubbles_and_align(const uint8_t *data, int count)
      * (well, actually, technically 298? since we insert a blank spot after every potential generate cycle)
      */
 
-    step_bubbles(GEN_TO_XFER_GATE - count * 2);
+    step_bubbles(GEN_TO_XFER_GATE - count * 2 - xff);
 }
 
 void read_bubbles(uint8_t *data, int count)
 {
-    int i, bit, func;
-
     /* Pre-run the detector track.
      * We begin reading from bubble position 68.
      */
     repeat_func(DETECTOR_PRERUN_LEN, FUNC_ANN);
+    read_bubbles_raw(data, count);
+}
+
+void read_bubbles_raw(uint8_t *data, int count)
+{
+    int i, bit, func;
 
     for (i = 0; i < count; i++) {
         
@@ -188,7 +239,6 @@ void read_bubbles(uint8_t *data, int count)
 
         bit = run_function(func);
         bit |= run_function(FUNC_ANN);
-
 
         set_bit(data, i, bit);
     }
@@ -232,4 +282,39 @@ void unsafe_drive()
 int drive_power_state()
 {
     return !!(GPIOA->IDR & BIT(15));
+}
+
+static void step_loop_counter()
+{
+    minor_loop_position++;
+
+    if (minor_loop_position >= MINOR_LOOP_LEN)
+        minor_loop_position -= MINOR_LOOP_LEN;
+}
+
+int get_loop_position()
+{
+    return minor_loop_position;
+}
+
+void seek_by(int count)
+{
+    while (count >= MINOR_LOOP_LEN)
+        count -= MINOR_LOOP_LEN;
+
+    while (count < 0)
+        count += MINOR_LOOP_LEN;
+
+    step_bubbles(count);
+}
+
+void seek_to(int pos)
+{
+    if (pos < 0 || pos >= MINOR_LOOP_LEN) {
+        uart_printf("Invalid seek target: %d\n", pos);
+        return;
+    }
+
+    while (minor_loop_position != pos)
+        step_bubbles(1);
 }
