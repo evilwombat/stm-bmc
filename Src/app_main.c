@@ -345,6 +345,8 @@ void write_block(int write_target)
 //    purge_major_loop();
     uart_printf("Write to %3d: ", write_target);
 
+    int offset = 0;
+
     write_buf[0] = 0xff;
     write_buf[1] = 0xff;
     write_buf[2] = 0x00;
@@ -357,6 +359,13 @@ void write_block(int write_target)
     write_buf[9] = 0x00;
     write_buf[10] = 0x02;
     write_buf[11] = write_target;
+
+
+    if (write_target & 0x01) {
+        write_buf[3] = 0xAA;
+        write_buf[4] = 0x55;
+    }
+
 
     seek_to(write_target - GEN_TO_XFER_GATE);
     generate_bubbles_and_align(write_buf, gen_length);
