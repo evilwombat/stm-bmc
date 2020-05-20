@@ -47,8 +47,6 @@ void wait_for_drive()
     }
 }
 
-extern int xff;
-
 void check_drive_state()
 {
     if (!drive_power_state()) {
@@ -63,7 +61,6 @@ void try_xout()
     int i, found;
 
     uint8_t read_buf[BITBUFFER_SIZE];
-    xff = 0;
 
     while(1) {
         __disable_irq();
@@ -162,17 +159,11 @@ void try_xin()
     write_buf[2] = 0xFF;
     write_buf[3] = 0xFF;
 
-    xff = 300;
-
-    xff = 0;
-
     while(1) {
         __disable_irq();
 //        uart_printf("Purging major loop and detector track\n");
         purge_major_loop();
     
-        uart_printf("Fudge factor is %3d - ", xff);
-
 //        uart_printf("Generating bubbles\n");
         generate_bubbles_and_align(write_buf, gen_length);
 
@@ -199,7 +190,7 @@ void try_xin()
         __enable_irq();
         HAL_Delay(250);
         __disable_irq();
-        xff++;
+//        xff++;
 
 //        while(1);
     }
@@ -211,7 +202,6 @@ void try_xin_all()
     int i, found;
 
     uint8_t read_buf[BITBUFFER_SIZE];
-    xff = 0;
 
     while(1) {
         __disable_irq();
@@ -417,7 +407,6 @@ void try_transfer()
 int app_main(void)
 {
     int i;
-    xff = 0;
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("Start\n");
     __enable_irq();
@@ -427,11 +416,7 @@ int app_main(void)
     uart_printf("Setting up function sequencer DMA\n");
     sequencer_init();
 
-
-    xff = 0;
-
     wait_for_drive();
-
 
     while(1)
         try_transfer();

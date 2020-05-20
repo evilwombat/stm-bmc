@@ -210,8 +210,6 @@ void generate_bubbles(const uint8_t *data, int count)
     }
 }
 
-int xff;
-
 void generate_bubbles_and_align(const uint8_t *data, int count)
 {
     if (count * 2 > GEN_TO_XFER_GATE)
