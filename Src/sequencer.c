@@ -79,8 +79,6 @@ void sequencer_run(const uint32_t *seq, int len)
     /* Enable the timer.... and so it begins */
     __HAL_TIM_ENABLE(&htimer2);
 
-    int i = 0;
-
     /* Wait for DMA to complete */
     while(!(DMA1->ISR & DMA_ISR_TCIF2));
 

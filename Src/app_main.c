@@ -423,9 +423,10 @@ int app_main(void)
     __enable_irq();
     HAL_Delay(200);
 
-    counter_init();
+    detector_init();
     uart_printf("Setting up function sequencer DMA\n");
     sequencer_init();
+
 
     xff = 0;
 
@@ -436,6 +437,7 @@ int app_main(void)
         try_transfer();
 
     test_hello();
+
 //    test_hello();
 //    try_xin_all();
 //     try_xin();

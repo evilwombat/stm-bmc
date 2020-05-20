@@ -168,7 +168,7 @@ uint32_t seq[SEQ_SIZE];
 int run_function(int func)
 {
     memset(seq, 0, SEQ_SIZE);
-    counter_reset();
+    detector_reset();
     generate_function_timings(seq, func);
 
     unsafe_drive();
@@ -177,13 +177,13 @@ int run_function(int func)
 
     step_loop_counter();
 
-    return counter_read();
+    return detector_read();
 }
 
 int run_function_2x(int func)
 {
     memset(seq, 0, SEQ_SIZE);
-    counter_reset();
+    detector_reset();
     generate_function_timings_2x(seq, func);
 
     unsafe_drive();
@@ -191,7 +191,7 @@ int run_function_2x(int func)
     safe_drive();
     step_loop_counter();
     step_loop_counter();
-    return counter_read();
+    return detector_read();
 }
 
 void generate_bubbles(const uint8_t *data, int count)

@@ -4,6 +4,6 @@ void uart_printf(const char *fmt, ...);
 #define BIT(i) (1U << (i))
 
 
-void counter_init();
-void counter_reset();
-int counter_read();
+void detector_init();
+void detector_reset();
+int detector_read();
