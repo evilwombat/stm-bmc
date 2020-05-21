@@ -48,7 +48,7 @@
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+void handle_systick_music();
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
