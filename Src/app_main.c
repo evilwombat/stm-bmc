@@ -369,7 +369,7 @@ void write_block(int write_target)
     memset(read_buf, 0, sizeof(read_buf));
 
     read_bubbles(read_buf, sizeof(read_buf) * 8);
-    dump_buffer(read_buf, 20);
+    dump_buffer(read_buf, 30);
 
     seek_to(0);
 }
