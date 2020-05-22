@@ -327,8 +327,16 @@ void write_block(int write_target)
 {
     uint8_t read_buf[BITBUFFER_SIZE];
     uint8_t write_buf[BITBUFFER_SIZE];
-    int gen_length = 120;
-    memset(write_buf, 0, sizeof(write_buf));
+    int gen_length = 156;
+
+    memset(write_buf, 0x00, sizeof(write_buf));
+
+    if (write_target & 0x01)
+        memset(write_buf, 0xaa, sizeof(write_buf));
+    else
+        memset(write_buf, 0x55, sizeof(write_buf));
+
+    memset(write_buf, write_target, sizeof(write_buf));
 
     read_block(write_target, 0);
 
@@ -336,7 +344,7 @@ void write_block(int write_target)
     uart_printf("Write to %3d: ", write_target);
 
     int offset = 0;
-
+/*
     write_buf[0] = 0xff;
     write_buf[1] = 0xff;
     write_buf[2] = 0x00;
@@ -355,7 +363,7 @@ void write_block(int write_target)
         write_buf[3] = 0xAA;
         write_buf[4] = 0x55;
     }
-
+*/
 
     seek_to(write_target - GEN_TO_XFER_GATE);
     generate_bubbles_and_align(write_buf, gen_length);
@@ -380,15 +388,15 @@ void try_transfer()
     int read_target = 0;
 
     uart_printf("\n\nWriting...\n");
-    while(write_target < 16) {
-        write_block(write_target + 0xF0);
+    while(write_target < 128) {
+        write_block(write_target + 0);
         write_target++;
         check_drive_state();
     }
 
     uart_printf("\n\nReading...\n");
-    while(read_target < 16) {
-        read_block(read_target + 0xF0, 1);
+    while(read_target < 128) {
+        read_block(read_target + 0, 1);
 
         read_target++;
         check_drive_state();
