@@ -64,7 +64,6 @@ void try_xout()
     uint8_t read_buf[BITBUFFER_SIZE];
 
     while(1) {
-        __disable_irq();
 
         if (!drive_power_state()) {
             uart_printf("Drive is off...\n");
@@ -92,9 +91,7 @@ void try_xout()
             uart_printf("nothing\n");
         }
 
-        __enable_irq();
         HAL_Delay(10);
-        __disable_irq();
         iter++;
     }
 }
@@ -108,7 +105,6 @@ void try_find_loops()
     uint8_t read_buf[BITBUFFER_SIZE];
 
     while(1) {
-        __disable_irq();
 
         if (!drive_power_state()) {
             uart_printf("Drive is off...\n");
@@ -142,9 +138,7 @@ void try_find_loops()
             loops++;
         }
 
-        __enable_irq();
         HAL_Delay(10);
-        __disable_irq();
         iter++;
     }
 }
@@ -161,16 +155,13 @@ void try_xin()
     write_buf[3] = 0xFF;
 
     while(1) {
-        __disable_irq();
 //        uart_printf("Purging major loop and detector track\n");
         purge_major_loop();
     
 //        uart_printf("Generating bubbles\n");
         generate_bubbles_and_align(write_buf, gen_length);
 
-        __enable_irq();
         HAL_Delay(100);
-        __disable_irq();
 
 //        uart_printf("Pushing bubbles to detector via annihilation gate\n");
 
@@ -188,9 +179,7 @@ void try_xin()
 //        uart_printf("Done\n");
 //        uart_printf("\n\n");
 
-        __enable_irq();
         HAL_Delay(250);
-        __disable_irq();
 //        xff++;
 
 //        while(1);
@@ -205,7 +194,6 @@ void try_xin_all()
     uint8_t read_buf[BITBUFFER_SIZE];
 
     while(1) {
-        __disable_irq();
 
         if (!drive_power_state()) {
             uart_printf("Drive is off...\n");
@@ -228,9 +216,7 @@ void try_xin_all()
 
         dump_buffer(read_buf, BITBUFFER_SIZE);
 
-        __enable_irq();
         HAL_Delay(10);
-        __disable_irq();
         iter++;
     }
 }
@@ -256,16 +242,13 @@ void test_hello()
     int gen_length = 12 * 8;
 
     while(1) {
-        __disable_irq();
         uart_printf("Purging major loop and detector track\n");
         purge_major_loop();
   
         uart_printf("Generating bubbles in major loop\n");
         generate_bubbles_and_align(write_buf, gen_length);
 
-        __enable_irq();
         HAL_Delay(100);
-        __disable_irq();
 
         uart_printf("Skipping over the transfer gate??\n");
         step_bubbles(2);
@@ -290,9 +273,7 @@ void test_hello()
 //        uart_printf("Done\n");
 //        uart_printf("\n\n");
 
-        __enable_irq();
         HAL_Delay(250);
-        __disable_irq();
 
         if (!drive_power_state()) {
             uart_printf("Drive is off...\n");
@@ -304,7 +285,7 @@ void test_hello()
 void read_block(int read_target, int show)
 {
     uint8_t read_buf[BITBUFFER_SIZE];
-    __disable_irq();
+
  //   purge_major_loop();
     seek_to(read_target);
     if (show)
@@ -404,12 +385,9 @@ void try_transfer()
     }
 
     uart_printf(".\n");
-    __enable_irq();
     check_drive_state();
     HAL_Delay(2000);
     check_drive_state();
-
-    __disable_irq();
     
 }
 
