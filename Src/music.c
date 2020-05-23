@@ -7,7 +7,23 @@
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 
-void play_note(int channel, uint8_t note) {
+#define NUM_TRACKS  2
+
+struct track_state {
+    int pos;
+    int playing;
+    int time_left;
+    int ended;
+};
+
+struct {
+    struct track_state tracks[NUM_TRACKS];
+    int time;
+    int enabled;
+    int cooldown;
+} music_state;
+
+static void play_note(int channel, uint8_t note) {
     uint16_t pwm_val = 0;
 
     if (note != 0)
@@ -34,20 +50,10 @@ void play_note(int channel, uint8_t note) {
     }
 }
 
-struct track_state {
-    int pos;
-    int playing;
-    int time_left;
-    int ended;
-};
-
-#define NUM_TRACKS  2
-
-void test_pwm()
+static void music_init()
 {
-    struct track_state tracks[2];
-    memset(tracks, 0, sizeof(tracks));
-
+    int i;
+    memset(&music_state, 0, sizeof(music_state));
 
     HAL_TIM_OC_Start(&htim3, TIM_CHANNEL_4);
     HAL_TIM_OC_Start(&htim4, TIM_CHANNEL_4);
@@ -55,56 +61,96 @@ void test_pwm()
     __HAL_TIM_ENABLE(&htim3);
     __HAL_TIM_ENABLE(&htim4);
 
-    play_note(0, 0);
-    play_note(1, 0);
+    for (i = 0; i < NUM_TRACKS; i++)
+        play_note(i, 0);
+}
 
+static void music_step()
+{
+    int t;
+    const struct note **track_data[] = {left_hand, right_hand};
+
+    int active = 0;
+
+    for (t = 0; t < 2; t++) {
+        struct track_state *cur = &music_state.tracks[t];
+        const struct note *cur_notes = track_data[t];
+
+        if (cur->playing) {
+            cur->time_left--;
+
+            if (!cur->time_left) {
+                cur->playing = 0;
+                play_note(t, 0);
+            }
+        }
+
+        if (cur->ended && cur->time_left == 0) {
+            continue;
+        } else {
+            active++;
+        }
+
+        if (cur_notes[cur->pos].start_time == music_state.time) {
+            cur->playing = 1;
+            cur->time_left = cur_notes[cur->pos].duration;
+            play_note(t, cur_notes[cur->pos].note);
+            cur->pos++;
+
+            if (cur_notes[cur->pos].note == 0 && cur_notes[cur->pos].start_time == 0)
+                cur->ended = 1;
+        }
+    }
+
+    music_state.time++;
+
+    if (!active) {
+        play_note(0, 0);
+        play_note(1, 0);
+        memset(&music_state.tracks, 0, sizeof(music_state.tracks));
+        music_state.time = 0;
+    }
+}
+
+void music_start()
+{
+    music_init();
+    music_state.enabled = 1;
+}
+
+void music_stop()
+{
+    int i;
+    music_state.enabled = 0;
+
+    for (i = 0; i < NUM_TRACKS; i++)
+        play_note(i, 0);
+}
+
+void handle_systick_music()
+{
+    if (!music_state.enabled)
+        return;
+
+    if (music_state.cooldown) {
+        music_state.cooldown--;
+        return;
+    }
+
+    music_state.cooldown = 30;
+    music_step();
+}
+
+void test_pwm()
+{
     HAL_Delay(500);
 
     uart_printf("hello pwm\n");
 
-    int t = 0;
-    int cur_time = 0;
+    music_init();
 
-    struct note **track_data[] = {left_hand, right_hand};
+    music_state.enabled = 1;
 
-    while(1) {
-
-      //  uart_printf("Time = %d\n", cur_time);
-
-        for (t = 0; t < 2; t++) {
-            struct track_state *cur = &tracks[t];
-            const struct note *cur_notes = track_data[t];
-
-            if (cur->playing) {
-                cur->time_left--;
-            //    uart_printf("Playing, left = %d\n", cur->time_left);
-
-                if (!cur->time_left) {
-                    cur->playing = 0;
-                    play_note(t, 0);
-                }
-            }
-
-            if (cur->ended)
-                continue;
-
-            if ((t == 0 && cur_notes[cur->pos].start_time == cur_time) ||
-                (t == 1 && cur_notes[cur->pos].start_time == cur_time)) {
-
-            //    uart_printf("Track %d, Note: %d, Duration: %d\n", t, cur_notes[cur->pos].note, cur_notes[cur->pos].duration);
-                cur->playing = 1;
-                cur->time_left = cur_notes[cur->pos].duration; // - 1;
-                play_note(t, cur_notes[cur->pos].note);
-                cur->pos++;
-            } else {
-                if (t == 1) {
-            //        uart_printf("Waiting for: %d\n", cur_notes[cur->pos].start_time);
-                }
-            }
-        }
-
-        HAL_Delay(30);
-        cur_time++;
-    }
+    while(1);
 }
 
