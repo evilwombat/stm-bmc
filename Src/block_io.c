@@ -1,5 +1,8 @@
-#include "block_io.h"
 #include <string.h>
+#include "block_io.h"
+#include "bmc.h"
+#include "sequencer.h"
+#include "util.h"
 
 const int sector_shifts[SECTOR_REDUNDANCY] = {0, 6, 12};
 
@@ -121,6 +124,7 @@ int block_read(int block_num, uint8_t *block_buf, int *error_count)
     int read_mask = 0;
     int attempt = 0;
     int success = 0;
+    int ret;
 
     uint8_t sector_buf[SECTOR_LEN];
     uint8_t combined_buf[SECTOR_LEN];
@@ -143,15 +147,24 @@ int block_read(int block_num, uint8_t *block_buf, int *error_count)
             break;
         }
 
+        uart_printf("\nError while reading block %d, copy %d\n", block_num, attempt);
+        uart_printf("Read buffer: ");
+        dump_buffer(sector_buf, SECTOR_LEN);
+        uart_printf("\n");
+
         combine_sector_buffers(combined_buf, sector_buf);
         if (verify_crc(combined_buf) == 0) {
             success = 1;
             break;
         }
 
-        uart_printf("Warning: CRC error while reading block %d, trying backup copy %d\n", block_num, attempt);
+        uart_printf("Error in combined block %d, copy %d\n", block_num, attempt);
+        uart_printf("Comb buffer: ");
+        dump_buffer(combined_buf, SECTOR_LEN);
 
         attempt++;
+
+        uart_printf("Warning: CRC error while reading block %d; now trying backup copy %d\n", block_num, attempt);
     }
 
     if (error_count)
@@ -164,6 +177,36 @@ int block_read(int block_num, uint8_t *block_buf, int *error_count)
 
     memcpy(block_buf, combined_buf, BLOCK_LEN);
 
-//    uart_printf("Restoring copies: %d\n", read_mask);
-    return restore_sectors(block_num, combined_buf, read_mask);
+    ret = restore_sectors(block_num, combined_buf, read_mask);
+    
+    /* Retry once */
+    if (ret)
+        restore_sectors(block_num, combined_buf, read_mask);
+
+    if (attempt != 0) {
+        if (success)
+            uart_printf("Successfully corrected block %d after %d attempts\n", block_num, attempt);
+        else
+            uart_printf("Could not correct block %d\n:(\n", block_num);
+    }
+
+    return !success;
+}
+
+void bubble_storage_init()
+{
+    uart_printf("Initializing STM32 Bubble Memory Controller\n");
+    uart_printf("Major loop size: %d bubble positions\n", MAJOR_LOOP_LEN);
+    uart_printf("Minor loop size: %d bubble positions\n", MINOR_LOOP_LEN);
+    uart_printf("Start sector: %d\n", START_SECTOR);
+    uart_printf("Sector redundancy: %d\n", SECTOR_REDUNDANCY);
+    uart_printf("Sector length: %d bytes\n", SECTOR_LEN);
+    uart_printf("Block length: %d bytes\n", BLOCK_LEN);
+    uart_printf("Usable capacity: %d blocks (%d bytes)\n", NUM_BLOCKS, NUM_BLOCKS * BLOCK_LEN);
+    uart_printf("Setting up bubble detector\n");
+    detector_init();
+
+    uart_printf("Setting up function sequencer DMA\n");
+    sequencer_init();
+    safe_drive();
 }

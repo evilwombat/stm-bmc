@@ -57,31 +57,38 @@ void check_drive_state()
     }
 }
 
-void test_read_block(int read_target, int show)
+void test_read_block(int block, int show)
 {
-    uint8_t read_buf[SECTOR_BUFFER_LEN];
+    uint8_t read_buf[BLOCK_LEN];
     int ret;
+    int error_count = 0;
+    char note_msg[128];
 
     if (show)
-        uart_printf("Read %3d: ", read_target);
+        uart_printf("Read %3d: ", block);
 
     memset(read_buf, 0, sizeof(read_buf));
 
-    ret = bmc_read_sector(read_target, read_buf);
+    ret = block_read(block, read_buf, &error_count);
+
+    snprintf(note_msg, sizeof(note_msg), "%s  errors %s: %d", 
+        ret == 0 ? "(ok)" : "UNCORRECTABLE ERROR",
+        ret == 0 ? "corrected" : "!!!!!",
+        error_count);
 
     if (show)
-        dump_buffer_msg(read_buf, SECTOR_BUFFER_LEN, ret == 0 ? "(ok)" : "!!!!!");
+        dump_buffer_msg(read_buf, BLOCK_LEN, note_msg);
 }
 
-void test_write_block(int write_target) 
+void test_write_block(int block) 
 {
-    uint8_t write_buf[SECTOR_BUFFER_LEN];
+    uint8_t write_buf[BLOCK_LEN];
 
-    memset(write_buf, write_target, sizeof(write_buf));
+    memset(write_buf, block, sizeof(write_buf));
 
-    uart_printf("Write to %3d: ", write_target);
+    uart_printf("Write to %3d: ", block);
 
-    if (write_target & 0x01) {
+    if (block & 0x01) {
         write_buf[0] = 0xAA;
         write_buf[1] = 0x55;
     } else {
@@ -89,7 +96,9 @@ void test_write_block(int write_target)
         write_buf[1] = 0xAA;
     }
 
-    if (bmc_write_sector(write_target, write_buf) == 0) {
+    block_erase(block);
+
+    if (block_write(block, write_buf) == 0) {
         uart_printf("Success\n");
     } else {
         uart_printf("Detected unexpected bubbles??\n");
@@ -101,16 +110,21 @@ void try_transfer()
     int write_target = 0;
     int read_target = 0;
 
-    uart_printf("\n\nWriting...\n");
-    while(write_target < 32) {
+    uart_printf("\n\nWriting blocks...\n");
+    while(write_target < 16) {
         test_write_block(write_target + 0);
         write_target++;
         check_drive_state();
     }
 
-    uart_printf("\n\nReading...\n");
-    while(read_target < 32) {
+    uart_printf("\nMoment of truth...\n");
+    HAL_Delay(1000);
+
+    uart_printf("\n\nReading blocks...\n");
+    while(read_target < 16) {
         test_read_block(read_target + 0, 1);
+        test_read_block(read_target + 0, 1);
+//        test_read_block(read_target + 0, 1);
 
         read_target++;
         check_drive_state();
@@ -131,10 +145,7 @@ int app_main(void)
     __enable_irq();
     HAL_Delay(200);
 
-    detector_init();
-    uart_printf("Setting up function sequencer DMA\n");
-    sequencer_init();
-
+    bubble_storage_init();
     wait_for_drive();
 
     music_start();
