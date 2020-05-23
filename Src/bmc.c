@@ -339,3 +339,52 @@ void seek_to(int pos)
     while (minor_loop_position != pos)
         step_bubbles(1);
 }
+
+int bits_to_bytes(int num_bits)
+{
+    return (num_bits + 7) / 8;
+}
+
+void bmc_read_raw(int loop_pos, uint8_t *buf, int num_bits)
+{
+//    purge_major_loop();
+    seek_to(loop_pos);
+
+    step_bubbles(1);
+    run_function(FUNC_XOUT);
+
+    step_bubbles(XFER_GATE_TO_DET);
+
+    memset(buf, 0, bits_to_bytes(num_bits));
+    read_bubbles(buf, num_bits);
+    seek_to(0);
+}
+
+int bmc_write_raw(int loop_pos, uint8_t *buf, int num_bits)
+{
+    uint8_t read_buf[BITBUFFER_SIZE];
+    int i;
+
+    // read_block(write_target, 0);
+
+//    purge_major_loop();
+
+    seek_to(loop_pos - GEN_TO_XFER_GATE);
+    generate_bubbles_and_align(buf, num_bits);
+
+    step_bubbles(1);
+    run_function(FUNC_XIN);
+
+    step_bubbles(XFER_GATE_TO_DET);
+
+    memset(read_buf, 0, sizeof(read_buf));
+    read_bubbles(read_buf, sizeof(read_buf) * 8);
+
+    seek_to(0);
+
+    for (i = 0; i < BITBUFFER_SIZE; i++)
+        if (read_buf[i])
+            return -1;
+
+    return 0;
+}
