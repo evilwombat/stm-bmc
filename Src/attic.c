@@ -1,5 +1,6 @@
 #include "main.h"
 #include "bmc.h"
+#include "block_io.h"
 
 void try_transfer_raw()
 {
@@ -397,6 +398,46 @@ void test_write_block_raw(int write_target)
     }
 
     if (bmc_write_raw(write_target, write_buf, gen_length) == 0) {
+        uart_printf("Success\n");
+    } else {
+        uart_printf("Detected unexpected bubbles??\n");
+    }
+}
+
+
+void test_read_sector(int read_target, int show)
+{
+    uint8_t read_buf[SECTOR_LEN];
+    int ret;
+
+    if (show)
+        uart_printf("Read %3d: ", read_target);
+
+    memset(read_buf, 0, sizeof(read_buf));
+
+    ret = bmc_read_sector(read_target, read_buf);
+
+    if (show)
+        dump_buffer_msg(read_buf, SECTOR_LEN, ret == 0 ? "(ok)" : "!!!!!");
+}
+
+void test_write_sector(int write_target) 
+{
+    uint8_t write_buf[SECTOR_LEN];
+
+    memset(write_buf, write_target, sizeof(write_buf));
+
+    uart_printf("Write to %3d: ", write_target);
+
+    if (write_target & 0x01) {
+        write_buf[0] = 0xAA;
+        write_buf[1] = 0x55;
+    } else {
+        write_buf[0] = 0x55;
+        write_buf[1] = 0xAA;
+    }
+
+    if (bmc_write_sector(write_target, write_buf) == 0) {
         uart_printf("Success\n");
     } else {
         uart_printf("Detected unexpected bubbles??\n");
