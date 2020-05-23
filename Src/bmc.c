@@ -357,7 +357,6 @@ void bmc_read_raw(int loop_pos, uint8_t *buf, int num_bits)
 
     memset(buf, 0, bits_to_bytes(num_bits));
     read_bubbles(buf, num_bits);
-    seek_to(0);
 }
 
 int bmc_write_raw(int loop_pos, uint8_t *buf, int num_bits)
@@ -380,11 +379,14 @@ int bmc_write_raw(int loop_pos, uint8_t *buf, int num_bits)
     memset(read_buf, 0, sizeof(read_buf));
     read_bubbles(read_buf, sizeof(read_buf) * 8);
 
-    seek_to(0);
-
     for (i = 0; i < BITBUFFER_SIZE; i++)
         if (read_buf[i])
             return -1;
 
     return 0;
+}
+
+void bmc_idle()
+{
+    seek_to(0);
 }

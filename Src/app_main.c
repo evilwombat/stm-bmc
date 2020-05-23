@@ -116,9 +116,9 @@ void try_transfer()
         write_target++;
         check_drive_state();
     }
-
+    
+    bmc_idle();
     uart_printf("\nMoment of truth...\n");
-    HAL_Delay(1000);
 
     uart_printf("\n\nReading blocks...\n");
     while(read_target < 16) {
@@ -130,7 +130,10 @@ void try_transfer()
         check_drive_state();
     }
 
-    uart_printf(".\n");
+    uart_printf("\n\nMoving minor loops to the initial position\n");
+    bmc_idle();
+
+    uart_printf("It is now safe to power down the drive circuit\n");
     check_drive_state();
     HAL_Delay(2000);
     check_drive_state();
@@ -138,6 +141,9 @@ void try_transfer()
 
 int app_main(void)
 {
+    uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+    uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+    uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("Start\n");
   //  test_pwm();

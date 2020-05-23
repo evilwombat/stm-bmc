@@ -198,6 +198,9 @@ void bubble_storage_init()
     uart_printf("Initializing STM32 Bubble Memory Controller\n");
     uart_printf("Major loop size: %d bubble positions\n", MAJOR_LOOP_LEN);
     uart_printf("Minor loop size: %d bubble positions\n", MINOR_LOOP_LEN);
+    uart_printf("Generator to Transfer gate: %d bubble positions\n", GEN_TO_XFER_GATE);
+    uart_printf("Transfer gate to Annihilation gate: %d bubble positions\n", XFER_GATE_TO_DET);
+    uart_printf("Annihilation gate to Detector: %d bubble positions\n", DETECTOR_PRERUN_LEN);
     uart_printf("Start sector: %d\n", START_SECTOR);
     uart_printf("Sector redundancy: %d\n", SECTOR_REDUNDANCY);
     uart_printf("Sector length: %d bytes\n", SECTOR_LEN);
