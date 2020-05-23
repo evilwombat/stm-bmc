@@ -1,7 +1,7 @@
 #include "main.h"
 #include "bmc.h"
 
-void try_transfer()
+void try_transfer_raw()
 {
     int write_target = 0;
     int read_target = 0;
@@ -25,7 +25,6 @@ void try_transfer()
     check_drive_state();
     HAL_Delay(2000);
     check_drive_state();
-    
 }
 
 
@@ -338,3 +337,68 @@ void write_block_old(int write_target)
     seek_to(0);
 }
 
+
+void test_read_block_raw(int read_target, int show)
+{
+    uint8_t read_buf[BITBUFFER_SIZE];
+
+    if (show)
+        uart_printf("Read %3d: ", read_target);
+
+    memset(read_buf, 0, sizeof(read_buf));
+
+    bmc_read_raw(read_target, read_buf, 160);
+
+    if (show)
+        dump_buffer(read_buf, 30);
+}
+
+void test_write_block_raw(int write_target) 
+{
+    uint8_t read_buf[BITBUFFER_SIZE];
+    uint8_t write_buf[BITBUFFER_SIZE];
+    int gen_length = 156;
+
+    memset(write_buf, 0x00, sizeof(write_buf));
+
+    if (write_target & 0x01)
+        memset(write_buf, 0xaa, sizeof(write_buf));
+    else
+        memset(write_buf, 0x55, sizeof(write_buf));
+
+    memset(write_buf, write_target, sizeof(write_buf));
+
+    test_read_block_raw(write_target, 0);
+
+    uart_printf("Write to %3d: ", write_target);
+
+    int offset = 0;
+/*
+    write_buf[0] = 0xff;
+    write_buf[1] = 0xff;
+    write_buf[2] = 0x00;
+    write_buf[3] = 0x55;
+    write_buf[4] = 0xAA;
+    write_buf[5] = write_target;
+    write_buf[6] = write_target;
+    write_buf[7] = write_target;
+    write_buf[8] = write_target;
+    write_buf[9] = 0x00;
+    write_buf[10] = 0x02;
+    write_buf[11] = write_target;
+
+*/
+    if (write_target & 0x01) {
+        write_buf[0] = 0xAA;
+        write_buf[1] = 0x55;
+    } else {
+        write_buf[0] = 0x55;
+        write_buf[1] = 0xAA;
+    }
+
+    if (bmc_write_raw(write_target, write_buf, gen_length) == 0) {
+        uart_printf("Success\n");
+    } else {
+        uart_printf("Detected unexpected bubbles??\n");
+    }
+}

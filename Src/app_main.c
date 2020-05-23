@@ -18,6 +18,7 @@
 
 #include <string.h>
 #include "bitbuffer.h"
+#include "block_io.h"
 #include "bmc.h"
 #include "sequencer.h"
 #include "util.h"
@@ -56,56 +57,30 @@ void check_drive_state()
     }
 }
 
-void read_block(int read_target, int show)
+void test_read_block(int read_target, int show)
 {
-    uint8_t read_buf[BITBUFFER_SIZE];
+    uint8_t read_buf[SECTOR_BUFFER_LEN];
+    int ret;
 
     if (show)
         uart_printf("Read %3d: ", read_target);
 
     memset(read_buf, 0, sizeof(read_buf));
 
-    bmc_read_raw(read_target, read_buf, 160);
+    ret = bmc_read_sector(read_target, read_buf);
 
     if (show)
-        dump_buffer(read_buf, 30);
+        dump_buffer_msg(read_buf, SECTOR_BUFFER_LEN, ret == 0 ? "(ok)" : "!!!!!");
 }
 
-void write_block(int write_target) 
+void test_write_block(int write_target) 
 {
-    uint8_t read_buf[BITBUFFER_SIZE];
-    uint8_t write_buf[BITBUFFER_SIZE];
-    int gen_length = 156;
-
-    memset(write_buf, 0x00, sizeof(write_buf));
-
-    if (write_target & 0x01)
-        memset(write_buf, 0xaa, sizeof(write_buf));
-    else
-        memset(write_buf, 0x55, sizeof(write_buf));
+    uint8_t write_buf[SECTOR_BUFFER_LEN];
 
     memset(write_buf, write_target, sizeof(write_buf));
 
-    read_block(write_target, 0);
-
     uart_printf("Write to %3d: ", write_target);
 
-    int offset = 0;
-/*
-    write_buf[0] = 0xff;
-    write_buf[1] = 0xff;
-    write_buf[2] = 0x00;
-    write_buf[3] = 0x55;
-    write_buf[4] = 0xAA;
-    write_buf[5] = write_target;
-    write_buf[6] = write_target;
-    write_buf[7] = write_target;
-    write_buf[8] = write_target;
-    write_buf[9] = 0x00;
-    write_buf[10] = 0x02;
-    write_buf[11] = write_target;
-
-*/
     if (write_target & 0x01) {
         write_buf[0] = 0xAA;
         write_buf[1] = 0x55;
@@ -114,17 +89,41 @@ void write_block(int write_target)
         write_buf[1] = 0xAA;
     }
 
-    if (bmc_write_raw(write_target, write_buf, gen_length) == 0) {
+    if (bmc_write_sector(write_target, write_buf) == 0) {
         uart_printf("Success\n");
     } else {
         uart_printf("Detected unexpected bubbles??\n");
     }
 }
 
+void try_transfer()
+{
+    int write_target = 0;
+    int read_target = 0;
+
+    uart_printf("\n\nWriting...\n");
+    while(write_target < 32) {
+        test_write_block(write_target + 0);
+        write_target++;
+        check_drive_state();
+    }
+
+    uart_printf("\n\nReading...\n");
+    while(read_target < 32) {
+        test_read_block(read_target + 0, 1);
+
+        read_target++;
+        check_drive_state();
+    }
+
+    uart_printf(".\n");
+    check_drive_state();
+    HAL_Delay(2000);
+    check_drive_state();
+}
 
 int app_main(void)
 {
-    int i;
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("Start\n");
   //  test_pwm();

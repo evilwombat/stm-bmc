@@ -16,6 +16,8 @@ void unsafe_drive();
 /* The datasheet in the Develco report claims this is 640? */
 #define MAJOR_LOOP_LEN  641
 
+#define MINOR_LOOP_LEN  641
+
 /* Shift bubble at position 68 onto detector track and push it to position 87 on the detector track,
  * which places it just in front of the detectors. We should see this bubble during the next field cycle
  * passing over the detectors.
@@ -42,4 +44,5 @@ void seek_to(int pos);
 void seek_by(int count);
 int get_loop_position();
 
-#define MINOR_LOOP_LEN  641
+void bmc_read_raw(int loop_pos, uint8_t *buf, int num_bits);
+int bmc_write_raw(int loop_pos, uint8_t *buf, int num_bits);

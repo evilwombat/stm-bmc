@@ -18,7 +18,7 @@ void set_bit(uint8_t* data, int pos, int val)
         data[pos / 8] |= (1 << (7 - (pos % 8)));
 }
 
-void dump_buffer(uint8_t* data, int len)
+void dump_buffer_msg(uint8_t* data, int len, const char *msg)
 {
     int i;
     int found = 0;
@@ -37,5 +37,10 @@ void dump_buffer(uint8_t* data, int len)
         uart_printf("%02x ", data[i]);
     }
 
-    uart_printf("\n");
+    uart_printf("  %s\n", msg);
+}
+
+void dump_buffer(uint8_t* data, int len)
+{
+    dump_buffer_msg(data, len, "");
 }
