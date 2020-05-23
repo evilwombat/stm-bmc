@@ -21,6 +21,7 @@
 #include "bmc.h"
 #include "sequencer.h"
 #include "util.h"
+#include "music.h"
 
 void wait_for_drive()
 {
