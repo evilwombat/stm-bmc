@@ -80,6 +80,34 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define SAFETY_Pin GPIO_PIN_10
+#define SAFETY_GPIO_Port GPIOB
+#define STROBE_Pin GPIO_PIN_11
+#define STROBE_GPIO_Port GPIOB
+#define FUNC_XOUT_Pin GPIO_PIN_12
+#define FUNC_XOUT_GPIO_Port GPIOB
+#define FUNC_XIN_Pin GPIO_PIN_13
+#define FUNC_XIN_GPIO_Port GPIOB
+#define FUNC_GEN_Pin GPIO_PIN_14
+#define FUNC_GEN_GPIO_Port GPIOB
+#define FUNC_ANN_Pin GPIO_PIN_15
+#define FUNC_ANN_GPIO_Port GPIOB
+#define BUBBLE_DETECT_Pin GPIO_PIN_12
+#define BUBBLE_DETECT_GPIO_Port GPIOA
+#define DRIVE_STATE_Pin GPIO_PIN_15
+#define DRIVE_STATE_GPIO_Port GPIOA
+#define DRV_A1_Pin GPIO_PIN_3
+#define DRV_A1_GPIO_Port GPIOB
+#define DRV_A2_Pin GPIO_PIN_4
+#define DRV_A2_GPIO_Port GPIOB
+#define DRV_A3_Pin GPIO_PIN_5
+#define DRV_A3_GPIO_Port GPIOB
+#define DRV_A4_Pin GPIO_PIN_6
+#define DRV_A4_GPIO_Port GPIOB
+#define DRV_EN_12_Pin GPIO_PIN_7
+#define DRV_EN_12_GPIO_Port GPIOB
+#define DRV_EN_34_Pin GPIO_PIN_8
+#define DRV_EN_34_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

@@ -6,12 +6,12 @@ static int minor_loop_position = 0;
 
 #define SEQ_SIZE    200
 
-#define A   BIT(5)
-#define B   BIT(6)
-#define C   BIT(7) 
-#define D   BIT(8)
+/* PORT A */
+#define PIN_DRIVE_STATE 15
 
-#define PIN_SAFETY  9
+
+/* PORT B */
+#define PIN_SAFETY  10
 
 #define PIN_ANN     15
 #define PIN_GEN     14
@@ -20,9 +20,6 @@ static int minor_loop_position = 0;
 
 #define PIN_STROBE  11
 
-#define ON(b)       BIT(b)
-#define OFF(b)      BIT((b) + 16)
-
 #define DRV_EN_12   7
 #define DRV_A1      3
 #define DRV_A2      4
@@ -30,6 +27,9 @@ static int minor_loop_position = 0;
 #define DRV_EN_34   8
 #define DRV_A3      5
 #define DRV_A4      6
+
+#define ON(b)       BIT(b)
+#define OFF(b)      BIT((b) + 16)
 
 #define DRIVE_ON(on_side, off_side, enable)     (ON(enable) | ON(on_side) | OFF(off_side))
 #define DRIVE_OFF(enable)                       (OFF(enable))
@@ -289,7 +289,7 @@ void unsafe_drive()
 
 int drive_power_state()
 {
-    return !!(GPIOA->IDR & BIT(15));
+    return !!(GPIOA->IDR & BIT(PIN_DRIVE_STATE));
 }
 
 static void step_loop_counter()
