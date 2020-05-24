@@ -3,7 +3,7 @@
 #include "util.h"
 #include "main.h"
 
-extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
 extern TIM_HandleTypeDef htim1;
 
 void uart_printf(const char *fmt, ...)
@@ -18,11 +18,11 @@ void uart_printf(const char *fmt, ...)
 
     for (i = 0; i < len; i++) {
         unsigned char c = buffer[i];
-        HAL_UART_Transmit(&huart1, &c, 1, -1);
+        HAL_UART_Transmit(&huart2, &c, 1, -1);
 
         if (c == '\n') {
             c = '\r';
-            HAL_UART_Transmit(&huart1, &c, 1, -1);
+            HAL_UART_Transmit(&huart2, &c, 1, -1);
         }
     }
 }

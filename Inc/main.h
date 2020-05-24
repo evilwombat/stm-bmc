@@ -92,6 +92,12 @@ void Error_Handler(void);
 #define FUNC_GEN_GPIO_Port GPIOB
 #define FUNC_ANN_Pin GPIO_PIN_15
 #define FUNC_ANN_GPIO_Port GPIOB
+#define ENC_A_Pin GPIO_PIN_8
+#define ENC_A_GPIO_Port GPIOA
+#define ENC_B_Pin GPIO_PIN_9
+#define ENC_B_GPIO_Port GPIOA
+#define ENC_BUTTON_Pin GPIO_PIN_10
+#define ENC_BUTTON_GPIO_Port GPIOA
 #define BUBBLE_DETECT_Pin GPIO_PIN_12
 #define BUBBLE_DETECT_GPIO_Port GPIOA
 #define DRIVE_STATE_Pin GPIO_PIN_15
