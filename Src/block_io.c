@@ -127,9 +127,9 @@ int block_read(int block_num, uint8_t *block_buf, int *error_count)
     int ret;
 
     uint8_t sector_buf[SECTOR_LEN];
+    uint8_t sector_buf_retry[SECTOR_LEN];
     uint8_t combined_buf[SECTOR_LEN];
 
-    memset(sector_buf, 0, sizeof(sector_buf));
     memset(combined_buf, 0, sizeof(combined_buf));
 
     while (!success && attempt < SECTOR_REDUNDANCY) {
@@ -137,13 +137,33 @@ int block_read(int block_num, uint8_t *block_buf, int *error_count)
         /* Keep track of which copies need to be restored */
         read_mask |= BIT(attempt);
 
+        memset(sector_buf, 0, sizeof(sector_buf));
         bmc_read_raw(sector_index(block_num, attempt), sector_buf, SECTOR_LEN * 8);
-
         shift_sector(sector_buf, -sector_shifts[attempt]);
 
         if (verify_crc(sector_buf) == 0) {
             success = 1;
             memcpy(combined_buf, sector_buf, SECTOR_LEN);
+            break;
+        }
+
+        uart_printf("First read of block %d try %d:  ", block_num, attempt);
+        dump_buffer(sector_buf, sizeof(sector_buf));
+
+        memset(sector_buf_retry, 0, sizeof(sector_buf_retry));
+        bmc_read_raw(sector_index(block_num, attempt), sector_buf_retry, SECTOR_LEN * 8);
+        shift_sector(sector_buf_retry, -sector_shifts[attempt]);
+
+        uart_printf("Second read of block %d try %d: ", block_num, attempt);
+        dump_buffer(sector_buf_retry, sizeof(sector_buf_retry));
+        combine_sector_buffers(sector_buf_retry, sector_buf);
+        uart_printf("Combined both reads:     ");
+        dump_buffer(sector_buf_retry, sizeof(sector_buf_retry));
+
+        if (verify_crc(sector_buf_retry) == 0) {
+            uart_printf("Doing two reads of the same sector worked????????\n");
+            success = 1;
+            memcpy(combined_buf, sector_buf_retry, SECTOR_LEN);
             break;
         }
 
