@@ -347,6 +347,9 @@ int bits_to_bytes(int num_bits)
 
 void bmc_read_raw(int loop_pos, uint8_t *buf, int num_bits)
 {
+    uint8_t repeat_buf[BITBUFFER_SIZE];
+    int cur_pos = 0, i;
+
 //    purge_major_loop();
     seek_to(loop_pos);
 
@@ -355,8 +358,20 @@ void bmc_read_raw(int loop_pos, uint8_t *buf, int num_bits)
 
     step_bubbles(XFER_GATE_TO_DET);
 
+    cur_pos = get_loop_position();
+
     memset(buf, 0, bits_to_bytes(num_bits));
     read_bubbles(buf, num_bits);
+
+    seek_to(cur_pos);
+    memset(repeat_buf, 0, sizeof(repeat_buf));
+    read_bubbles(repeat_buf, num_bits);
+
+    if (!buffer_is_zero(repeat_buf, sizeof(repeat_buf))) {
+        uart_printf("\n\n\nWOAH WOAH WOAH. Found some bubbles on reread!\n");
+        for (i = 0; i < bits_to_bytes(num_bits); i++)
+            buf[i] |= repeat_buf[i];
+    }
 }
 
 int bmc_write_raw(int loop_pos, uint8_t *buf, int num_bits)

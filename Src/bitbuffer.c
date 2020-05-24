@@ -18,17 +18,23 @@ void set_bit(uint8_t* data, int pos, int val)
         data[pos / 8] |= (1 << (7 - (pos % 8)));
 }
 
-void dump_buffer_msg(uint8_t* data, int len, const char *msg)
+int buffer_is_zero(uint8_t *data, int len)
 {
-    int i;
-    int found = 0;
+    int found = 0, i;
 
     for (i = 0; i < len; i++) {
         if (data[i])
             found = 1;
     }
 
-    if (!found) {
+    return !found;
+}
+
+void dump_buffer_msg(uint8_t* data, int len, const char *msg)
+{
+    int i;
+
+    if (buffer_is_zero(data, len)) {
         uart_printf("nothing\n");
         return;
     }
