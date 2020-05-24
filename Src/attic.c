@@ -256,6 +256,64 @@ void test_hello()
 }
 
 
+void test_hello_quiet()
+{
+    int i;
+    uint8_t write_buf[BITBUFFER_SIZE];
+    uint8_t read_buf[BITBUFFER_SIZE];
+
+    memset(write_buf, 0, sizeof(write_buf));
+    memset(read_buf, 0, sizeof(read_buf));
+
+    memcpy(write_buf, "HELLO WORLD\0\0\0\0\0", 16);
+/*
+    write_buf[0] = 0xFF;
+    write_buf[1] = 0x00;
+    write_buf[2] = 0xAA;
+    write_buf[3] = 0x55;
+*/
+
+    int gen_length = 12 * 8;
+
+    while(1) {
+        purge_major_loop();
+  
+        generate_bubbles_and_align(write_buf, gen_length);
+
+        HAL_Delay(100);
+
+        step_bubbles(2);
+        step_bubbles(XFER_GATE_TO_DET);
+
+        memset(read_buf, 0, sizeof(read_buf));
+    
+        read_bubbles(read_buf, sizeof(read_buf) * 8);
+
+        uart_printf("Raw read buffer:\n");
+        dump_buffer(read_buf, 20);
+
+        uart_printf("Read data from major loop: <");
+        for (i = 0; i < 20; i++)
+            uart_printf("%c", read_buf[i]);
+        uart_printf(">\n");
+
+    
+//        while(1);
+//        uart_printf("Done\n");
+//        uart_printf("\n\n");
+
+        HAL_Delay(250);
+
+        if (!drive_power_state()) {
+            uart_printf("Drive is off...\n");
+            while(!drive_power_state());
+        }
+    }
+}
+
+
+
+
 void read_block_old(int read_target, int show)
 {
     uint8_t read_buf[BITBUFFER_SIZE];

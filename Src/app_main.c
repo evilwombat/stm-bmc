@@ -84,7 +84,7 @@ void test_write_block(int block)
 {
     uint8_t write_buf[BLOCK_LEN];
 
-    memset(write_buf, block, sizeof(write_buf));
+    memset(write_buf, block + 0xf0, sizeof(write_buf));
 
     uart_printf("Write to %3d: ", block);
 
@@ -116,8 +116,9 @@ void try_transfer()
         write_target++;
         check_drive_state();
     }
-    
+
     bmc_idle();
+
     uart_printf("\nMoment of truth...\n");
 
     uart_printf("\n\nReading blocks...\n");
@@ -154,6 +155,19 @@ int app_main(void)
     bubble_storage_init();
     wait_for_drive();
 
+  //  test_hello_quiet();
+
+    uart_printf("Warming up the detector / running tests...\n");
+
+    if (warm_up_detector() == 0) {
+        uart_printf("Warm-up successful\n");
+    } else {
+        uart_printf("Warm-up test failed! Check detector calibration?\n");
+        bmc_idle();
+        while(1);
+    }
+    
+    bmc_idle();
     music_start();
 
     while(1)

@@ -165,6 +165,10 @@ int block_read(int block_num, uint8_t *block_buf, int *error_count)
         attempt++;
 
         uart_printf("Warning: CRC error while reading block %d; now trying backup copy %d\n", block_num, attempt);
+
+        purge_major_loop();
+        purge_major_loop();
+        purge_major_loop();
     }
 
     if (error_count)
@@ -193,6 +197,104 @@ int block_read(int block_num, uint8_t *block_buf, int *error_count)
     return !success;
 }
 
+int test_main_loop()
+{
+
+    return 0;
+}
+
+int test_sector(int sector, uint16_t pattern)
+{
+    uint8_t read_buf[SECTOR_LEN];
+    uint8_t write_buf[SECTOR_LEN];
+    int i, ret;
+
+    memset(read_buf, 0, sizeof(read_buf));
+
+    for (i = 0; i < SECTOR_LEN - 1; i++) {
+        if (i & 0x01)
+            write_buf[i] = pattern;
+        else
+            write_buf[i] = pattern >> 8;
+    }
+
+    bmc_read_raw(sector, read_buf, SECTOR_LEN * 8);
+    bmc_write_raw(sector, write_buf, SECTOR_LEN * 8);
+    bmc_read_raw(sector, read_buf, SECTOR_LEN * 8);
+
+    ret = (memcmp(read_buf, write_buf, SECTOR_LEN) != 0);
+
+    if (ret) {
+        uart_printf("Failure dump: ");
+        dump_buffer(read_buf, SECTOR_LEN - 1);
+        bmc_read_raw(sector, read_buf, SECTOR_LEN * 8);
+        bmc_read_raw(sector, read_buf, SECTOR_LEN * 8);
+    }
+
+    return ret;
+}
+
+#define NUM_TEST_PATTERNS   8
+const uint16_t test_patterns[] = {
+    0x5555,
+    0xaaaa,
+    0xffff,
+    0x7777,
+    0xff00,
+    0x00ff,
+    0xaa55,
+    0x55aa,
+};
+
+int run_test_patterns() 
+{
+    int result = 0;
+    int i, ret;
+    for (i = 0; i < NUM_TEST_PATTERNS; i++) {
+        ret = test_sector(TEST_SECTOR, test_patterns[i]);
+
+        if (ret)
+            uart_printf("Failure on pattern %04x\n", test_patterns[i]);
+
+        result += ret;
+    }
+
+    bmc_idle();
+
+    return result;
+}
+
+int warm_up_detector()
+{
+    int i = 0;
+    int ret;
+    int success_run = 0;
+    uint8_t read_buf[SECTOR_LEN];
+
+    purge_major_loop();
+    bmc_read_raw(TEST_SECTOR, read_buf, SECTOR_LEN * 8);
+
+    while(i < 500) {
+
+        ret = run_test_patterns();
+
+        if (ret)
+            success_run = 0;
+        else
+            success_run++;
+
+        uart_printf("Test iteration %3d, result = %s, run = %d\n", i, ret ? "FAIL" : "PASS", success_run);
+
+        if (success_run >= 5) {
+            uart_printf("Okay, we're good to go?\n");
+            return 0;
+        }
+        i++;
+    }
+
+    return -1;
+}
+
 void bubble_storage_init()
 {
     uart_printf("Initializing STM32 Bubble Memory Controller\n");
@@ -201,6 +303,7 @@ void bubble_storage_init()
     uart_printf("Generator to Transfer gate: %d bubble positions\n", GEN_TO_XFER_GATE);
     uart_printf("Transfer gate to Annihilation gate: %d bubble positions\n", XFER_GATE_TO_DET);
     uart_printf("Annihilation gate to Detector: %d bubble positions\n", DETECTOR_PRERUN_LEN);
+    uart_printf("Test sector: %d\n", TEST_SECTOR);
     uart_printf("Start sector: %d\n", START_SECTOR);
     uart_printf("Sector redundancy: %d\n", SECTOR_REDUNDANCY);
     uart_printf("Sector length: %d bytes\n", SECTOR_LEN);

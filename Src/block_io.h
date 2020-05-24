@@ -16,4 +16,6 @@
 #define SECTOR_REDUNDANCY   3
 
 #define NUM_BLOCKS          213
-#define START_SECTOR        0
+#define START_SECTOR        1
+
+#define TEST_SECTOR         0
