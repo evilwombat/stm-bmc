@@ -317,7 +317,7 @@ int warm_up_detector()
 
 void bubble_storage_init()
 {
-    uart_printf("Initializing STM32 Bubble Memory Controller\n");
+    uart_printf("STM32 Bubble Memory Controller  :)\n");
     uart_printf("Major loop size: %d bubble positions\n", MAJOR_LOOP_LEN);
     uart_printf("Minor loop size: %d bubble positions\n", MINOR_LOOP_LEN);
     uart_printf("Generator to Transfer gate: %d bubble positions\n", GEN_TO_XFER_GATE);

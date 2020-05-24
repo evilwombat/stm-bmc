@@ -142,6 +142,7 @@ void try_transfer()
 
 int app_main(void)
 {
+    int i;
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
@@ -157,6 +158,14 @@ int app_main(void)
 
   //  test_hello_quiet();
 
+    
+    uart_printf("Warming up the drive coils (in case that helps)\n");
+    for (i = 0; i <= 100; i++) {
+        uart_printf("\rGetting ready. %3d / 100...", i);
+        step_bubbles(10000);
+    }
+    uart_printf("\n");
+
     uart_printf("Warming up the detector / running tests...\n");
 
     if (warm_up_detector() == 0) {
@@ -166,7 +175,7 @@ int app_main(void)
         bmc_idle();
         while(1);
     }
-    
+
     bmc_idle();
     music_start();
 
