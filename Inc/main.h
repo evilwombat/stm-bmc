@@ -80,7 +80,7 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define SAFETY_Pin GPIO_PIN_10
+#define SAFETY_Pin GPIO_PIN_0
 #define SAFETY_GPIO_Port GPIOB
 #define STROBE_Pin GPIO_PIN_11
 #define STROBE_GPIO_Port GPIOB

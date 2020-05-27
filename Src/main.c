@@ -70,7 +70,7 @@ DMA_HandleTypeDef hdma_tim2_up;
 DMA_HandleTypeDef hdma_tim2_ch1;
 DMA_HandleTypeDef hdma_tim2_ch2_ch4;
 
-UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 
@@ -84,7 +84,7 @@ static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_TIM1_Init(void);
-static void MX_USART2_UART_Init(void);
+static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -127,7 +127,7 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   MX_TIM1_Init();
-  MX_USART2_UART_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   app_main();
   /* USER CODE END 2 */
@@ -416,35 +416,35 @@ static void MX_TIM4_Init(void)
 }
 
 /**
-  * @brief USART2 Initialization Function
+  * @brief USART3 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART2_UART_Init(void)
+static void MX_USART3_UART_Init(void)
 {
 
-  /* USER CODE BEGIN USART2_Init 0 */
+  /* USER CODE BEGIN USART3_Init 0 */
 
-  /* USER CODE END USART2_Init 0 */
+  /* USER CODE END USART3_Init 0 */
 
-  /* USER CODE BEGIN USART2_Init 1 */
+  /* USER CODE BEGIN USART3_Init 1 */
 
-  /* USER CODE END USART2_Init 1 */
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_HalfDuplex_Init(&huart3) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART2_Init 2 */
+  /* USER CODE BEGIN USART3_Init 2 */
 
-  /* USER CODE END USART2_Init 2 */
+  /* USER CODE END USART3_Init 2 */
 
 }
 
@@ -481,8 +481,8 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SAFETY_GPIO_Port, SAFETY_Pin, GPIO_PIN_SET);
@@ -492,12 +492,19 @@ static void MX_GPIO_Init(void)
                           |FUNC_ANN_Pin|DRV_A1_Pin|DRV_A2_Pin|DRV_A3_Pin 
                           |DRV_A4_Pin|DRV_EN_12_Pin|DRV_EN_34_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : SAFETY_Pin STROBE_Pin FUNC_XOUT_Pin FUNC_XIN_Pin 
-                           FUNC_GEN_Pin FUNC_ANN_Pin DRV_A1_Pin DRV_A2_Pin 
-                           DRV_A3_Pin DRV_A4_Pin DRV_EN_12_Pin DRV_EN_34_Pin */
-  GPIO_InitStruct.Pin = SAFETY_Pin|STROBE_Pin|FUNC_XOUT_Pin|FUNC_XIN_Pin 
-                          |FUNC_GEN_Pin|FUNC_ANN_Pin|DRV_A1_Pin|DRV_A2_Pin 
-                          |DRV_A3_Pin|DRV_A4_Pin|DRV_EN_12_Pin|DRV_EN_34_Pin;
+  /*Configure GPIO pin : SAFETY_Pin */
+  GPIO_InitStruct.Pin = SAFETY_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(SAFETY_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : STROBE_Pin FUNC_XOUT_Pin FUNC_XIN_Pin FUNC_GEN_Pin 
+                           FUNC_ANN_Pin DRV_A1_Pin DRV_A2_Pin DRV_A3_Pin 
+                           DRV_A4_Pin DRV_EN_12_Pin DRV_EN_34_Pin */
+  GPIO_InitStruct.Pin = STROBE_Pin|FUNC_XOUT_Pin|FUNC_XIN_Pin|FUNC_GEN_Pin 
+                          |FUNC_ANN_Pin|DRV_A1_Pin|DRV_A2_Pin|DRV_A3_Pin 
+                          |DRV_A4_Pin|DRV_EN_12_Pin|DRV_EN_34_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;

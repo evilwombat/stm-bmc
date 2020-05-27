@@ -11,7 +11,7 @@ static int minor_loop_position = 0;
 
 
 /* PORT B */
-#define PIN_SAFETY  10
+#define PIN_SAFETY  0
 
 #define PIN_ANN     15
 #define PIN_GEN     14
