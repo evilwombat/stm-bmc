@@ -23,6 +23,7 @@
 #include "sequencer.h"
 #include "util.h"
 #include "music.h"
+#include "encoder.h"
 
 void wait_for_drive()
 {
@@ -148,17 +149,23 @@ int app_main(void)
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("Start\n");
-  //  test_pwm();
+
+    encoder_init();
 
     __enable_irq();
     HAL_Delay(200);
+
+/*
+    while(1) {
+        uart_printf("%04x %d\n", encoder_read(), encoder_pressed());
+    }
+*/
 
     bubble_storage_init();
     wait_for_drive();
 
   //  test_hello_quiet();
 
-    
     uart_printf("Warming up the drive coils (in case that helps)\n");
     for (i = 0; i <= 100; i++) {
         uart_printf("\rGetting ready. %3d / 100...", i);

@@ -44,6 +44,7 @@ Src/bitbuffer.c \
 Src/bmc.c \
 Src/block_io.c \
 Src/music.c \
+Src/encoder.c \
 Src/util.c \
 Src/stm32f1xx_it.c \
 Src/stm32f1xx_hal_msp.c \
