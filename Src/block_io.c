@@ -3,6 +3,7 @@
 #include "bmc.h"
 #include "sequencer.h"
 #include "util.h"
+#include "console.h"
 
 const int sector_shifts[SECTOR_REDUNDANCY] = {0, 6, 12};
 
@@ -284,6 +285,8 @@ int run_test_patterns()
     return result;
 }
 
+#define NUM_TEST_RUNS   5
+
 int warm_up_detector()
 {
     int i = 0;
@@ -295,7 +298,7 @@ int warm_up_detector()
     bmc_read_raw(TEST_SECTOR, read_buf, SECTOR_LEN * 8);
 
     while(i < 500) {
-
+        con_printf("\rSelf-test %d/%d...", success_run, NUM_TEST_RUNS);
         ret = run_test_patterns();
 
         if (ret)
@@ -305,8 +308,9 @@ int warm_up_detector()
 
         uart_printf("Test iteration %3d, result = %s, run = %d\n", i, ret ? "FAIL" : "PASS", success_run);
 
-        if (success_run >= 5) {
+        if (success_run >= NUM_TEST_RUNS) {
             uart_printf("Okay, we're good to go?\n");
+            con_printf("\rSelf-test PASS ?\n");
             return 0;
         }
         i++;

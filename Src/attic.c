@@ -501,3 +501,38 @@ void test_write_sector(int write_target)
         uart_printf("Detected unexpected bubbles??\n");
     }
 }
+
+void try_transfer()
+{
+    int write_target = 0;
+    int read_target = 0;
+/*
+    uart_printf("\n\nWriting blocks...\n");
+    while(write_target < 16) {
+        test_write_block(write_target + 0);
+        write_target++;
+        check_drive_state();
+    }
+*/
+    bmc_idle();
+
+    uart_printf("\nMoment of truth...\n");
+
+    uart_printf("\n\nReading blocks...\n");
+    while(read_target < 16) {
+        test_read_block(read_target + 0, 1);
+        test_read_block(read_target + 0, 1);
+//        test_read_block(read_target + 0, 1);
+
+        read_target++;
+        check_drive_state();
+    }
+
+    uart_printf("\n\nMoving minor loops to the initial position\n");
+    bmc_idle();
+
+    uart_printf("It is now safe to power down the drive circuit\n");
+    check_drive_state();
+    HAL_Delay(2000);
+    check_drive_state();
+}

@@ -82,12 +82,12 @@ static int minor_loop_position = 0;
         seq[pos + 2] |= ON(PIN_GEN);            \
     }
 
-#define AO  -4
+#define AO  -3
 
 #define ANN                                     \
     if (func & FUNC_ANN) {                      \
         seq[pos + 14 + AO] |= OFF(PIN_ANN);     \
-        seq[pos + 14 + 19 + AO + 2] |= ON(PIN_ANN);  \
+        seq[pos + 14 + 19 + AO + 3] |= ON(PIN_ANN);  \
     }
 
 

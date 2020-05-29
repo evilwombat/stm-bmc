@@ -26,18 +26,21 @@
 #include "encoder.h"
 #include "lcd.h"
 #include "console.h"
+#include "gfx_util.h"
 
 void wait_for_drive()
 {
     if (drive_power_state()) {
         safe_drive();
         while(1) {
-            uart_printf("YOU BOOTED UP WITH THE DRIVE ENABLED?! YOU IDIOT.\n");
+            con_printf("YOU BOOTED UP WITH THE DRIVE ENABLED?! YOU IDIOT.\n");
+
             HAL_Delay(100);
         }
     }
 
     uart_printf("Waiting for drive safety switch\n");
+    con_printf("Arm the drive now\n");
 
     while(1) {
         while (!drive_power_state());
@@ -46,7 +49,7 @@ void wait_for_drive()
         HAL_Delay(100);
 
         if (drive_power_state()) {
-            uart_printf("Drive powered on. Okay, here we go.\n");
+            con_printf("Drive powered on.\nOkay, here we go.\n");
             return;
         }
     }
@@ -55,7 +58,7 @@ void wait_for_drive()
 void check_drive_state()
 {
     if (!drive_power_state()) {
-        uart_printf("Drive is off...\n");
+        con_printf("Drive is off...\n");
         while(!drive_power_state());
     }
 }
@@ -89,7 +92,7 @@ void test_write_block(int block)
 
     memset(write_buf, block + 0xf0, sizeof(write_buf));
 
-    uart_printf("Write to %3d: ", block);
+    con_printf("Write to %3d: ", block);
 
     if (block & 0x01) {
         write_buf[0] = 0xAA;
@@ -102,42 +105,52 @@ void test_write_block(int block)
     block_erase(block);
 
     if (block_write(block, write_buf) == 0) {
-        uart_printf("Success\n");
+        con_printf("Success\n");
     } else {
-        uart_printf("Detected unexpected bubbles??\n");
+        con_printf("Detected unexpected bubbles??\n");
     }
 }
 
-void try_transfer()
+void try_transfer_fancy()
 {
     int write_target = 0;
     int read_target = 0;
-
-    uart_printf("\n\nWriting blocks...\n");
+/*
+    con_printf("\nWriting blocks...\n");
     while(write_target < 16) {
         test_write_block(write_target + 0);
         write_target++;
         check_drive_state();
     }
-
+*/
     bmc_idle();
 
     uart_printf("\nMoment of truth...\n");
 
     uart_printf("\n\nReading blocks...\n");
+    con_clear();
+
     while(read_target < 16) {
         test_read_block(read_target + 0, 1);
+
+        gfx_draw_countdown(read_target * 2);
+        lcd_update();
+
         test_read_block(read_target + 0, 1);
-//        test_read_block(read_target + 0, 1);
+
+        gfx_draw_countdown(read_target * 2 + 1);
+        lcd_update();
 
         read_target++;
         check_drive_state();
     }
 
+    con_clear();
     uart_printf("\n\nMoving minor loops to the initial position\n");
     bmc_idle();
 
     uart_printf("It is now safe to power down the drive circuit\n");
+    con_printf("Disarm drive now.\n");
     check_drive_state();
     HAL_Delay(2000);
     check_drive_state();
@@ -153,16 +166,20 @@ int app_main(void)
     uart_printf("Start\n");
 
     encoder_init();
+    lcd_init();
+    con_init();
 
     __enable_irq();
     HAL_Delay(200);
 
-/*
-    while(1) {
-        uart_printf("%04x %d\n", encoder_read(), encoder_pressed());
+//    con_test();
+//    gfx_test();
+
+  /*  while(1) {
+        con_printf("%04x %d\n", encoder_read(), encoder_pressed());
     }
 */
-
+    con_clear();
     bubble_storage_init();
     wait_for_drive();
 
@@ -170,17 +187,19 @@ int app_main(void)
 
     uart_printf("Warming up the drive coils (in case that helps)\n");
     for (i = 0; i <= 100; i++) {
-        uart_printf("\rGetting ready. %3d / 100...", i);
+        con_printf("\rGetting ready %3d/100...", i);
         step_bubbles(10000);
     }
-    uart_printf("\n");
+    con_printf("\n");
 
     uart_printf("Warming up the detector / running tests...\n");
 
+    con_printf("Self-test...\n");
+
     if (warm_up_detector() == 0) {
-        uart_printf("Warm-up successful\n");
+        con_printf("Warm-up successful\n");
     } else {
-        uart_printf("Warm-up test failed! Check detector calibration?\n");
+        con_printf("Warm-up test failed! Check detector calibration?\n");
         bmc_idle();
         while(1);
     }
@@ -189,7 +208,7 @@ int app_main(void)
     music_start();
 
     while(1)
-        try_transfer();
+        try_transfer_fancy();
 
     test_hello();
 
