@@ -24,6 +24,8 @@
 #include "util.h"
 #include "music.h"
 #include "encoder.h"
+#include "lcd.h"
+#include "console.h"
 
 void wait_for_drive()
 {

@@ -480,17 +480,41 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, LCD_DI_Pin|LCD_CS2_Pin|LCD_CS1_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, LCD_D0_Pin|LCD_D1_Pin|LCD_D2_Pin|LCD_D3_Pin 
+                          |LCD_D4_Pin|LCD_D5_Pin|LCD_D6_Pin|LCD_D7_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SAFETY_GPIO_Port, SAFETY_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, STROBE_Pin|FUNC_XOUT_Pin|FUNC_XIN_Pin|FUNC_GEN_Pin 
-                          |FUNC_ANN_Pin|DRV_A1_Pin|DRV_A2_Pin|DRV_A3_Pin 
-                          |DRV_A4_Pin|DRV_EN_12_Pin|DRV_EN_34_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, LCD_E_Pin|STROBE_Pin|FUNC_XOUT_Pin|FUNC_XIN_Pin 
+                          |FUNC_GEN_Pin|FUNC_ANN_Pin|DRV_A1_Pin|DRV_A2_Pin 
+                          |DRV_A3_Pin|DRV_A4_Pin|DRV_EN_12_Pin|DRV_EN_34_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : LCD_DI_Pin LCD_CS2_Pin LCD_CS1_Pin */
+  GPIO_InitStruct.Pin = LCD_DI_Pin|LCD_CS2_Pin|LCD_CS1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : LCD_D0_Pin LCD_D1_Pin LCD_D2_Pin LCD_D3_Pin 
+                           LCD_D4_Pin LCD_D5_Pin LCD_D6_Pin LCD_D7_Pin */
+  GPIO_InitStruct.Pin = LCD_D0_Pin|LCD_D1_Pin|LCD_D2_Pin|LCD_D3_Pin 
+                          |LCD_D4_Pin|LCD_D5_Pin|LCD_D6_Pin|LCD_D7_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : SAFETY_Pin */
   GPIO_InitStruct.Pin = SAFETY_Pin;
@@ -499,12 +523,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(SAFETY_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : STROBE_Pin FUNC_XOUT_Pin FUNC_XIN_Pin FUNC_GEN_Pin 
-                           FUNC_ANN_Pin DRV_A1_Pin DRV_A2_Pin DRV_A3_Pin 
-                           DRV_A4_Pin DRV_EN_12_Pin DRV_EN_34_Pin */
-  GPIO_InitStruct.Pin = STROBE_Pin|FUNC_XOUT_Pin|FUNC_XIN_Pin|FUNC_GEN_Pin 
-                          |FUNC_ANN_Pin|DRV_A1_Pin|DRV_A2_Pin|DRV_A3_Pin 
-                          |DRV_A4_Pin|DRV_EN_12_Pin|DRV_EN_34_Pin;
+  /*Configure GPIO pins : LCD_E_Pin STROBE_Pin FUNC_XOUT_Pin FUNC_XIN_Pin 
+                           FUNC_GEN_Pin FUNC_ANN_Pin DRV_A1_Pin DRV_A2_Pin 
+                           DRV_A3_Pin DRV_A4_Pin DRV_EN_12_Pin DRV_EN_34_Pin */
+  GPIO_InitStruct.Pin = LCD_E_Pin|STROBE_Pin|FUNC_XOUT_Pin|FUNC_XIN_Pin 
+                          |FUNC_GEN_Pin|FUNC_ANN_Pin|DRV_A1_Pin|DRV_A2_Pin 
+                          |DRV_A3_Pin|DRV_A4_Pin|DRV_EN_12_Pin|DRV_EN_34_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;

@@ -80,8 +80,32 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define LCD_DI_Pin GPIO_PIN_13
+#define LCD_DI_GPIO_Port GPIOC
+#define LCD_CS2_Pin GPIO_PIN_14
+#define LCD_CS2_GPIO_Port GPIOC
+#define LCD_CS1_Pin GPIO_PIN_15
+#define LCD_CS1_GPIO_Port GPIOC
+#define LCD_D0_Pin GPIO_PIN_0
+#define LCD_D0_GPIO_Port GPIOA
+#define LCD_D1_Pin GPIO_PIN_1
+#define LCD_D1_GPIO_Port GPIOA
+#define LCD_D2_Pin GPIO_PIN_2
+#define LCD_D2_GPIO_Port GPIOA
+#define LCD_D3_Pin GPIO_PIN_3
+#define LCD_D3_GPIO_Port GPIOA
+#define LCD_D4_Pin GPIO_PIN_4
+#define LCD_D4_GPIO_Port GPIOA
+#define LCD_D5_Pin GPIO_PIN_5
+#define LCD_D5_GPIO_Port GPIOA
+#define LCD_D6_Pin GPIO_PIN_6
+#define LCD_D6_GPIO_Port GPIOA
+#define LCD_D7_Pin GPIO_PIN_7
+#define LCD_D7_GPIO_Port GPIOA
 #define SAFETY_Pin GPIO_PIN_0
 #define SAFETY_GPIO_Port GPIOB
+#define LCD_E_Pin GPIO_PIN_2
+#define LCD_E_GPIO_Port GPIOB
 #define STROBE_Pin GPIO_PIN_11
 #define STROBE_GPIO_Port GPIOB
 #define FUNC_XOUT_Pin GPIO_PIN_12
