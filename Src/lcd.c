@@ -291,41 +291,44 @@ void lcd_clear_block(int x, int y, int width, int height)
     }
 }
 
+
+void lcd_pset(int x, int y, int value)
+{
+    int page, offset;
+    uint8_t mask;
+
+    if (x < 0 || y < 0 || x >= LCD_WIDTH || y >= LCD_HEIGHT)
+        return;
+
+    y = lcd_scroll_remap(y);
+
+    page = y >> 3;
+    y &= 0x07;
+
+    mask = ~(1 << y);
+
+    offset = LCD_WIDTH * page + x;
+
+    if (value) {
+        value = 1 << y;
+    }
+
+    vram[offset] &= mask;
+    vram[offset] |= value;
+
+    lcd_state.dirty_pages |= BIT(page);
+}
+
 void lcd_test()
 {  
     int i = 0;
 
-    for (i = 0; i < 1024; i++)
-        vram[i] = 0;
-
-    char buf[32];
-
-    lcd_set_scroll(0);
-
-    snprintf(buf, sizeof(buf), "Reading block %03d/999", i);
-    lcd_draw_text("Line 0", &font_5x7, 0, 0);
-    lcd_draw_text("Line 1", &font_5x7, 0, 8);
-    lcd_draw_text("Line 2", &font_5x7, 0, 16);
-    lcd_draw_text("Line 3", &font_5x7, 0, 24);
-    lcd_draw_text("Line 4", &font_5x7, 0, 32);
-    lcd_draw_text("Line 5", &font_5x7, 0, 40);
-    lcd_draw_text("Line 6", &font_5x7, 0, 48);
-    lcd_draw_text("Line 7", &font_5x7, 0, 56);
-    lcd_update(-1, -1);
-
-    i = 8;
     while(1) {
-        snprintf(buf, sizeof(buf), "Line next %d", i);
-        lcd_set_enable(0);
-        lcd_scroll(6);
-        lcd_clear_block(0, 58, 128, 6);
-        lcd_draw_text(buf, &font_3x5, 0, 58);
+        lcd_pset(i, i, 1);
         lcd_update();
-        lcd_set_enable(1);
-
         i++;
 
-        HAL_Delay(1000);
+     //   HAL_Delay(100);
     }
 
 

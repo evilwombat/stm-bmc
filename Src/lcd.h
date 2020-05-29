@@ -15,3 +15,5 @@ void lcd_draw_text(const char *text, const struct font *f, int x, int y);
 void lcd_update();
 void lcd_update_all();
 void lcd_clear();
+void lcd_pset(int x, int y, int value);
+void lcd_flip(int x, int y);
