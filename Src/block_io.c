@@ -78,7 +78,7 @@ int sector_index(int block_num, int num_copy)
     return START_SECTOR + block_num * SECTOR_REDUNDANCY + num_copy;
 }
 
-int restore_sectors(int block_num, uint8_t *block_buf, int redundancy_mask)
+int restore_sectors(int block_num, const uint8_t *block_buf, int redundancy_mask)
 {
     int i, ret = 0;
 
@@ -108,7 +108,7 @@ void block_erase(int block_num)
     }
 }
 
-int block_write(int block_num, uint8_t *block_buf)
+int block_write(int block_num, const uint8_t *block_buf)
 {
     return restore_sectors(block_num, block_buf, -1);
 }
