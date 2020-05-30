@@ -145,6 +145,11 @@ SECTIONS
     _edata = .;        /* define a global symbol at data end */
   } >RAM AT> FLASH
 
+  .payloadBufferBlock 0x20001000 :
+  {
+    KEEP(*(.payloadBufferSection))
+  } >RAM AT> FLASH
+
   
   /* Uninitialized data section */
   . = ALIGN(4);

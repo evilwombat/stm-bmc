@@ -43,6 +43,7 @@ Src/sequencer.c \
 Src/bitbuffer.c \
 Src/bmc.c \
 Src/block_io.c \
+Src/loader.c \
 Src/music.c \
 Src/encoder.c \
 Src/lcd.c \
