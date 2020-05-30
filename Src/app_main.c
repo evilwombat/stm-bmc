@@ -205,7 +205,20 @@ int app_main(void)
     }
 
     bmc_idle();
+
     music_start();
+    load_payload();
+    music_stop();
+    launch_payload();
+    while(1);
+
+    write_payload();
+    bmc_idle();
+    while(1);
+
+    music_start();
+
+
 
     while(1)
         try_transfer_fancy();

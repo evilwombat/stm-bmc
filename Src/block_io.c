@@ -5,7 +5,7 @@
 #include "util.h"
 #include "console.h"
 
-const int sector_shifts[SECTOR_REDUNDANCY] = {0, 6, 12};
+const int sector_shifts[SECTOR_REDUNDANCY] = {0, 6, 12, 3, 9, 2, 7};
 
 unsigned short crc16(const unsigned char* data_p, unsigned char length){
     unsigned char x;

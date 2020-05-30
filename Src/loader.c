@@ -95,7 +95,7 @@ void load_payload()
     }
 
     con_printf("\n");
-    con_printf("Total errors: %d\n", error_count);
+    con_printf("Errors fixed: %d\n", error_count);
     con_printf("Loading complete\n");
 
     bmc_idle();
