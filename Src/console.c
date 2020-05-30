@@ -21,6 +21,7 @@ void con_clear()
 {
     con_state.x = 0;
     con_state.y = 0;
+    con_state.newline_pending = 0;
     lcd_clear();
 }
 
@@ -28,6 +29,7 @@ void con_gotoxy(int x, int y)
 {
     con_state.x = x;
     con_state.y = y;
+    con_state.newline_pending = 0;
 }
 
 void con_set_font(const struct font *f)
