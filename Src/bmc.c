@@ -419,7 +419,7 @@ void wait_for_drive_arm()
     }
 
     uart_printf("Waiting for drive safety switch\n");
-    con_printf("Arm the drive now\n");
+    con_printf("Arm the drive circuit\n");
 
     while(1) {
         while (!drive_power_state());

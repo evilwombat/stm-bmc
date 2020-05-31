@@ -180,7 +180,7 @@ static const char *main_menu[] = {
     "Bubble memory loader",
     "Fast warmup (CAREFUL)",
     "Write new payload",
-    "Run sector tests",
+    "Run minor loop tests",
     "Run major loop test",
     NULL,
 };
@@ -206,8 +206,12 @@ int app_main(void)
     detector_init();
 
     con_clear();
-    con_printf("* STM32 Bubble Memory\n");
-    con_printf("Main menu:\n ");
+    con_printf(" ARM Bubble System \\\n");
+    con_set_font(&font_3x5);
+    con_printf("  github.com/evilwombat");
+    con_set_font(&font_5x7);
+
+    con_gotoxy(0, 19);
     choice = run_menu(main_menu, con_cur_y());
 
     con_printf("\n");
