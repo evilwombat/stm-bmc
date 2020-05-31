@@ -277,6 +277,9 @@ void test_hello_quiet()
 
     while(1) {
         purge_major_loop();
+        purge_major_loop();
+        purge_major_loop();
+        purge_major_loop();
   
         generate_bubbles_and_align(write_buf, gen_length);
 
