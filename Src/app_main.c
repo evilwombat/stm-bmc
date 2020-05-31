@@ -16,6 +16,7 @@
  *
  */
 
+#include <stdio.h>
 #include <string.h>
 #include "bitbuffer.h"
 #include "block_io.h"
@@ -158,9 +159,42 @@ void try_transfer_fancy()
     check_drive_state();
 }
 
+void warm_up_drive(int quick)
+{
+    int i;
+    int cycles = 100;
+
+    if (quick)
+        cycles = 10;
+
+    uart_printf("Warming up the drive coils (in case that helps)\n");
+    for (i = cycles; i >= 0; i--) {
+        con_printf("\rWarming up (%d)...  ", i);
+        step_bubbles(10000);
+    }
+    con_printf("\rWarming up done!   \n");
+}
+
+void shut_down()
+{
+    bmc_idle();
+    wait_for_drive_disarm();
+    con_printf("Power down now.\n");
+    while(1);
+}
+
+static const char *main_menu[] = {
+    "Bubble memory loader",
+    "Fast warmup (CAREFUL)",
+    "Write new payload",
+    "Run sector tests",
+    "Run major loop test",
+    NULL,
+};
+
 int app_main(void)
 {
-    int i, ret;
+    int i, ret, choice;
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
@@ -176,18 +210,35 @@ int app_main(void)
 
     con_clear();
     bubble_storage_init();
-
     detector_init();
-    wait_for_drive_arm();
 
-    uart_printf("Warming up the drive coils (in case that helps)\n");
-    for (i = 0; i <= 30; i++) {
-        con_printf("\rGetting ready %3d/100...", i);
-        step_bubbles(10000);
-    }
+    con_clear();
+    con_printf("* STM32 Bubble Memory\n");
+    con_printf("Main menu:\n ");
+    choice = run_menu(main_menu, con_cur_y());
+
     con_printf("\n");
 
-    uart_printf("Warming up the detector / running tests...\n");
+    wait_for_drive_arm();
+
+    if (choice == 0 || choice == 1)
+        warm_up_drive(choice == 1); /* Fast warmup? */
+
+    /* Sector tests */
+    if (choice == 3) {
+        con_printf("Running sector tests\n");
+        run_sector_tests();
+        shut_down();
+    }
+
+    /* Major loop test */
+    if (choice == 4) {
+        con_printf("Running sector tests\n");
+        test_major_loop();
+        shut_down();
+    }
+
+    uart_printf("Running detector tests...\n");
 
     ret = warm_up_detector();
 
@@ -197,15 +248,17 @@ int app_main(void)
 
         if (ret == SELFTEST_FAIL)
             con_printf("Warm-up test failed! Check detector calibration?\n");
-        bmc_idle();
 
-        wait_for_drive_disarm();
-        con_printf("Power down now.\n");
-
-        while(1);
+        shut_down();
     }
 
     bmc_idle();
+
+    if (choice == 2) {
+        con_printf("Writing payload\n");
+        write_payload();
+        shut_down();
+    }
 
     music_start();
     load_payload();
@@ -213,27 +266,6 @@ int app_main(void)
     launch_payload();
     while(1);
 
-    write_payload();
-    bmc_idle();
-    while(1);
-
-    music_start();
-
-
-
     while(1)
         try_transfer_fancy();
-
-    test_hello();
-
-//    test_hello();
-//    try_xin_all();
-//     try_xin();
-//    try_xout();
-//    try_find_loops();
-
-
-
-
-    while(1);
 }

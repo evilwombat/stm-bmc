@@ -107,3 +107,13 @@ void con_printf(const char *fmt, ...)
 
     con_write(buffer);
 }
+
+int con_font_height()
+{
+    return con_state.font->height;
+}
+
+int con_cur_y()
+{
+    return con_state.y;
+}

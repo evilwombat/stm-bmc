@@ -328,7 +328,7 @@ void lcd_invert_block(int x, int y, int width, int height)
         if (x + i >= LCD_WIDTH)
             return;
 
-        vram[upper_offset + x + i] ^= !upper_mask;
+        vram[upper_offset + x + i] ^= ~upper_mask;
 
         if (lower_mask != 0xff)
             vram[lower_offset + x + i] ^= ~lower_mask;

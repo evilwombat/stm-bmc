@@ -10,6 +10,7 @@ void lcd_init();
 void lcd_test();
 
 void lcd_clear_block(int x, int y, int width, int height);
+void lcd_invert_block(int x, int y, int width, int height);
 void lcd_draw_text(const char *text, const struct font *f, int x, int y);
 
 void lcd_update();

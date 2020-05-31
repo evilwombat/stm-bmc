@@ -153,6 +153,26 @@ int test_sector_io(const uint16_t *patterns, int num_patterns)
         return SELFTEST_FAIL;
 }
 
+void run_sector_tests()
+{
+    int ret;
+    int iter = 0;
+    int success_run = 0;
+    do {
+        iter++;
+        ret = test_sector_io(test_pattern_standard, ARRAY_SIZE(test_pattern_standard));
+
+        if (ret == SELFTEST_PASS) {
+            success_run++;
+            uart_printf("%03d PASS (%d)\n", iter, success_run);
+        }
+
+        if (ret == SELFTEST_FAIL) {
+            success_run = 0;
+            uart_printf("%03d FAIL\n", iter);
+        }
+    } while (ret != SELFTEST_ABORTED);
+}
 
 int warm_up_detector()
 {
