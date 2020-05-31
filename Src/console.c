@@ -1,7 +1,9 @@
-#include <string.h>
+#include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 #include "console.h"
 #include "lcd.h"
+#include "main.h"
 
 struct {
     const struct font *font;
@@ -59,7 +61,7 @@ static void con_newline()
 
 void con_write(const char *buf)
 {
-    unsigned char tmp[2];
+    char tmp[2];
     tmp[1] = 0;
     uart_printf("%s", buf);
 

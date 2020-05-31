@@ -53,7 +53,7 @@ int bmc_write_sector(int loop_pos, uint8_t *buf)
     return bmc_write_raw(loop_pos, buf, SECTOR_LEN * 8);
 }
 
-void shift_sector(uint8_t *buf, int amount)
+static void shift_sector(uint8_t *buf, int amount)
 {
     uint8_t output_buf[SECTOR_LEN];
     int i, j = amount;
@@ -73,12 +73,12 @@ void shift_sector(uint8_t *buf, int amount)
     memcpy(buf, output_buf, sizeof(output_buf));
 }
 
-int sector_index(int block_num, int num_copy)
+static int sector_index(int block_num, int num_copy)
 {
     return START_SECTOR + block_num * SECTOR_REDUNDANCY + num_copy;
 }
 
-int restore_sectors(int block_num, const uint8_t *block_buf, int redundancy_mask)
+static int restore_sectors(int block_num, const uint8_t *block_buf, int redundancy_mask)
 {
     int i, ret = 0;
 
@@ -113,7 +113,7 @@ int block_write(int block_num, const uint8_t *block_buf)
     return restore_sectors(block_num, block_buf, -1);
 }
 
-void combine_sector_buffers(uint8_t *dest, uint8_t *src)
+static void combine_sector_buffers(uint8_t *dest, uint8_t *src)
 {
     int i;
     for (i = 0; i < SECTOR_LEN; i++)
@@ -216,107 +216,6 @@ int block_read(int block_num, uint8_t *block_buf, int *error_count)
     }
 
     return !success;
-}
-
-int test_main_loop()
-{
-
-    return 0;
-}
-
-int test_sector(int sector, uint16_t pattern)
-{
-    uint8_t read_buf[SECTOR_LEN];
-    uint8_t write_buf[SECTOR_LEN];
-    int i, ret;
-
-    memset(read_buf, 0, sizeof(read_buf));
-
-    for (i = 0; i < SECTOR_LEN - 1; i++) {
-        if (i & 0x01)
-            write_buf[i] = pattern;
-        else
-            write_buf[i] = pattern >> 8;
-    }
-
-    bmc_read_raw(sector, read_buf, SECTOR_LEN * 8);
-    bmc_write_raw(sector, write_buf, SECTOR_LEN * 8);
-    bmc_read_raw(sector, read_buf, SECTOR_LEN * 8);
-
-    ret = (memcmp(read_buf, write_buf, SECTOR_LEN) != 0);
-
-    if (ret) {
-        uart_printf("Failure dump: ");
-        dump_buffer(read_buf, SECTOR_LEN - 1);
-        bmc_read_raw(sector, read_buf, SECTOR_LEN * 8);
-        bmc_read_raw(sector, read_buf, SECTOR_LEN * 8);
-    }
-
-    return ret;
-}
-
-#define NUM_TEST_PATTERNS   8
-const uint16_t test_patterns[] = {
-    0x5555,
-    0xaaaa,
-    0xffff,
-    0x7777,
-    0xff00,
-    0x00ff,
-    0xaa55,
-    0x55aa,
-};
-
-int run_test_patterns() 
-{
-    int result = 0;
-    int i, ret;
-    for (i = 0; i < NUM_TEST_PATTERNS; i++) {
-        ret = test_sector(TEST_SECTOR, test_patterns[i]);
-
-        if (ret)
-            uart_printf("Failure on pattern %04x\n", test_patterns[i]);
-
-        result += ret;
-    }
-
-    bmc_idle();
-
-    return result;
-}
-
-#define NUM_TEST_RUNS   5
-
-int warm_up_detector()
-{
-    int i = 0;
-    int ret;
-    int success_run = 0;
-    uint8_t read_buf[SECTOR_LEN];
-
-    purge_major_loop();
-    bmc_read_raw(TEST_SECTOR, read_buf, SECTOR_LEN * 8);
-
-    while(i < 500) {
-        con_printf("\rSelf-test %d/%d...", success_run, NUM_TEST_RUNS);
-        ret = run_test_patterns();
-
-        if (ret)
-            success_run = 0;
-        else
-            success_run++;
-
-        uart_printf("Test iteration %3d, result = %s, run = %d\n", i, ret ? "FAIL" : "PASS", success_run);
-
-        if (success_run >= NUM_TEST_RUNS) {
-            uart_printf("Okay, we're good to go?\n");
-            con_printf("\rSelf-test PASS ?\n");
-            return 0;
-        }
-        i++;
-    }
-
-    return -1;
 }
 
 void bubble_storage_init()

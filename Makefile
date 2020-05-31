@@ -42,6 +42,7 @@ Src/attic.c \
 Src/sequencer.c \
 Src/bitbuffer.c \
 Src/bmc.c \
+Src/selftest.c \
 Src/block_io.c \
 Src/loader.c \
 Src/music.c \

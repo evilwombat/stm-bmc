@@ -2,6 +2,7 @@
 #include "gfx_util.h"
 #include "lcd.h"
 #include "util.h"
+#include "console.h"
 
 const static uint8_t digit_data[10 * 7] = {
     /* 0 */
@@ -124,7 +125,6 @@ void gfx_draw_big_digit(int x, int y, int scale, int digit)
 {
     int i, j;
     int offset = digit * 7;
-    int px;
 
     for (i = 0; i < 8; i++)
         for (j = 0; j < 8; j++)

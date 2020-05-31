@@ -17,3 +17,4 @@ void lcd_update_all();
 void lcd_clear();
 void lcd_pset(int x, int y, int value);
 void lcd_flip(int x, int y);
+void lcd_scroll(int pixels);

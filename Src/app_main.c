@@ -27,8 +27,10 @@
 #include "lcd.h"
 #include "console.h"
 #include "gfx_util.h"
+#include "loader.h"
+#include "selftest.h"
 
-void wait_for_drive()
+void wait_for_drive_arm()
 {
     if (drive_power_state()) {
         safe_drive();
@@ -158,7 +160,7 @@ void try_transfer_fancy()
 
 int app_main(void)
 {
-    int i;
+    int i, ret;
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
@@ -172,21 +174,14 @@ int app_main(void)
     __enable_irq();
     HAL_Delay(200);
 
-//    con_test();
-//    gfx_test();
-
-  /*  while(1) {
-        con_printf("%04x %d\n", encoder_read(), encoder_pressed());
-    }
-*/
     con_clear();
     bubble_storage_init();
-    wait_for_drive();
 
-  //  test_hello_quiet();
+    detector_init();
+    wait_for_drive_arm();
 
     uart_printf("Warming up the drive coils (in case that helps)\n");
-    for (i = 0; i <= 100; i++) {
+    for (i = 0; i <= 30; i++) {
         con_printf("\rGetting ready %3d/100...", i);
         step_bubbles(10000);
     }
@@ -194,13 +189,19 @@ int app_main(void)
 
     uart_printf("Warming up the detector / running tests...\n");
 
-    con_printf("Self-test...\n");
+    ret = warm_up_detector();
 
-    if (warm_up_detector() == 0) {
-        con_printf("Warm-up successful\n");
+    if (ret == 0) {
+        con_printf("Warm-up test OK\n");
     } else {
-        con_printf("Warm-up test failed! Check detector calibration?\n");
+
+        if (ret == SELFTEST_FAIL)
+            con_printf("Warm-up test failed! Check detector calibration?\n");
         bmc_idle();
+
+        wait_for_drive_disarm();
+        con_printf("Power down now.\n");
+
         while(1);
     }
 

@@ -38,6 +38,7 @@ void step_bubbles(int steps);
 void purge_major_loop();
 void safe_drive();
 void unsafe_drive();
+void bmc_idle();
 
 int drive_power_state();
 void seek_to(int pos);

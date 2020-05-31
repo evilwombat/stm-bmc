@@ -1,3 +1,4 @@
+#include <string.h>
 #include "stm32f1xx_hal.h"
 #include "lcd.h"
 #include "util.h"
@@ -248,7 +249,6 @@ void lcd_draw_text(const char *text, const struct font *f, int x, int y)
 
 void lcd_clear_block(int x, int y, int width, int height)
 {
-    int pos = 0;
     int upper_page, lower_page;
     uint8_t mask = (1 << height) - 1;
     int i;
@@ -291,6 +291,49 @@ void lcd_clear_block(int x, int y, int width, int height)
     }
 }
 
+void lcd_invert_block(int x, int y, int width, int height)
+{
+    int upper_page, lower_page;
+    uint8_t mask = (1 << height) - 1;
+    int i;
+
+    y = lcd_scroll_remap(y);
+
+    upper_page = y / 8;
+    lower_page = upper_page + 1;
+
+    if (lower_page >= NUM_PAGES)
+        lower_page = 0;
+
+    /* Offset with top page */
+    y = y & 0x07;
+
+    uint8_t upper_mask = ~(mask << y);
+
+    int bottom_bits = 0;
+
+    lcd_state.dirty_pages |= BIT(upper_page);
+
+    if (y + height > 8) {
+        bottom_bits = y + height - 8;
+        lcd_state.dirty_pages |= BIT(lower_page);
+    }
+
+    uint8_t lower_mask = 0xff << bottom_bits;
+
+    int upper_offset = upper_page * LCD_WIDTH;
+    int lower_offset = lower_page * LCD_WIDTH;
+
+    for (i = 0; i < width; i++) {
+        if (x + i >= LCD_WIDTH)
+            return;
+
+        vram[upper_offset + x + i] ^= !upper_mask;
+
+        if (lower_mask != 0xff)
+            vram[lower_offset + x + i] ^= ~lower_mask;
+    }
+}
 
 void lcd_pset(int x, int y, int value)
 {

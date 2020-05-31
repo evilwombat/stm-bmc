@@ -5,8 +5,8 @@
 #include "util.h"
 #include "console.h"
 #include "block_io.h"
+#include "music.h"
 #include "loader.h"
-
 #include "payload.h"
 
 extern TIM_HandleTypeDef htim3;
@@ -15,7 +15,7 @@ extern TIM_HandleTypeDef htim4;
 #define PAYLOAD_MAX_SIZE    4096
 uint8_t __attribute__((section (".payloadBufferSection"))) payload_buf[PAYLOAD_MAX_SIZE];
 
-void wait_for_disarm()
+void wait_for_drive_disarm()
 {
     con_printf("Disarm the drive now\n");
 
@@ -66,7 +66,7 @@ void write_payload()
         con_printf("Encountered %d errors\n", error_count);
     }
     bmc_idle();
-    wait_for_disarm();
+    wait_for_drive_disarm();
 }
 
 void load_payload()
@@ -89,7 +89,7 @@ void load_payload()
             con_printf("\nThat failed.\n");
             uart_printf("Unrecoverable error reading block %d\n", i);
             bmc_idle();
-            wait_for_disarm();
+            wait_for_drive_disarm();
             while(1);
         }
     }
@@ -99,14 +99,14 @@ void load_payload()
     con_printf("Loading complete\n");
 
     bmc_idle();
-    wait_for_disarm();
+    wait_for_drive_disarm();
 }
 
 void launch_payload()
 {
     volatile uint32_t branch_destination = (uint32_t) payload_buf;
 
-    wait_for_disarm();
+    wait_for_drive_disarm();
 
     con_printf("Jumping to payload\n");
 

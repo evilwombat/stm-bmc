@@ -1,6 +1,8 @@
+#include <string.h>
 #include "main.h"
 #include "bmc.h"
 #include "block_io.h"
+#include "util.h"
 
 void try_transfer_raw()
 {
@@ -162,7 +164,7 @@ void try_xin()
 void try_xin_all() 
 {
     int iter = 0;
-    int i, found;
+    int i;
 
     uint8_t read_buf[BITBUFFER_SIZE];
 
@@ -360,7 +362,6 @@ void write_block_old(int write_target)
 //    purge_major_loop();
     uart_printf("Write to %3d: ", write_target);
 
-    int offset = 0;
 /*
     write_buf[0] = 0xff;
     write_buf[1] = 0xff;
@@ -417,7 +418,6 @@ void test_read_block_raw(int read_target, int show)
 
 void test_write_block_raw(int write_target) 
 {
-    uint8_t read_buf[BITBUFFER_SIZE];
     uint8_t write_buf[BITBUFFER_SIZE];
     int gen_length = 156;
 
@@ -434,7 +434,6 @@ void test_write_block_raw(int write_target)
 
     uart_printf("Write to %3d: ", write_target);
 
-    int offset = 0;
 /*
     write_buf[0] = 0xff;
     write_buf[1] = 0xff;
@@ -507,7 +506,6 @@ void test_write_sector(int write_target)
 
 void try_transfer()
 {
-    int write_target = 0;
     int read_target = 0;
 /*
     uart_printf("\n\nWriting blocks...\n");

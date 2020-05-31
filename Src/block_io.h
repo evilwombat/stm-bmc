@@ -19,3 +19,8 @@
 #define START_SECTOR        1
 
 #define TEST_SECTOR         0
+
+void block_erase(int block_num);
+int block_write(int block_num, const uint8_t *block_buf);
+int block_read(int block_num, uint8_t *block_buf, int *error_count);
+void bubble_storage_init();
