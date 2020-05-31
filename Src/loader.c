@@ -17,7 +17,7 @@ uint8_t __attribute__((section (".payloadBufferSection"))) payload_buf[PAYLOAD_M
 
 void wait_for_disarm()
 {
-    con_printf("Disrm the drive now\n");
+    con_printf("Disarm the drive now\n");
 
     while(1) {
         while (drive_power_state());

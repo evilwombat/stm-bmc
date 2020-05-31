@@ -29,17 +29,17 @@ void uart_printf(const char *fmt, ...)
 
 void detector_init()
 {
-    EXTI->IMR |= BIT(12);
+    EXTI->IMR |= BIT(11);
 }
 
 void detector_reset()
 {
-    EXTI->PR = BIT(12);
+    EXTI->PR = BIT(11);
 }
 
 int detector_read()
 {
-    return !!(EXTI->PR & BIT(12));
+    return !!(EXTI->PR & BIT(11));
 }
 
 /*
