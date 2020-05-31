@@ -6,6 +6,19 @@
 extern UART_HandleTypeDef huart3;
 extern TIM_HandleTypeDef htim1;
 
+uint16_t crc16(const uint8_t *data_p, int length)
+{
+    uint8_t x = 0;
+    uint16_t crc = 0xFFFF;
+
+    while (length--){
+        x = crc >> 8 ^ *data_p++;
+        x ^= x>>4;
+        crc = (crc << 8) ^ ((uint16_t)(x << 12)) ^ ((uint16_t)(x <<5)) ^ ((uint16_t)x);
+    }
+    return crc;
+}
+
 void uart_printf(const char *fmt, ...)
 {
     char buffer[256];

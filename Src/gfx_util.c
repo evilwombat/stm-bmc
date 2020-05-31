@@ -174,8 +174,6 @@ int run_menu(const char **items, int y)
         num_items++;
     }
 
-    uart_printf("Num_items = %d\n", num_items);
-
     menu_invert_item(y, cur_item, item_height);
     lcd_update();
 

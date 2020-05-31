@@ -1,3 +1,7 @@
+#pragma once
+
+#include <stdint.h>
+
 void uart_printf(const char *fmt, ...);
 
 #define ARRAY_SIZE(a)  (sizeof(a) / (sizeof((a)[0])))
@@ -7,3 +11,4 @@ void uart_printf(const char *fmt, ...);
 void detector_init();
 void detector_reset();
 int detector_read();
+uint16_t crc16(const uint8_t *data_p, int length);

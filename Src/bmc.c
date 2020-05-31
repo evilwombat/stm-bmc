@@ -1,4 +1,5 @@
 #include "bmc.h"
+#include "console.h"
 #include <string.h>
 
 static void step_loop_counter();
@@ -404,4 +405,56 @@ int bmc_write_raw(int loop_pos, uint8_t *buf, int num_bits)
 void bmc_idle()
 {
     seek_to(0);
+}
+
+void wait_for_drive_arm()
+{
+    if (drive_power_state()) {
+        safe_drive();
+        while(1) {
+            con_printf("YOU BOOTED UP WITH THE DRIVE ENABLED?! YOU IDIOT.\n");
+
+            HAL_Delay(100);
+        }
+    }
+
+    uart_printf("Waiting for drive safety switch\n");
+    con_printf("Arm the drive now\n");
+
+    while(1) {
+        while (!drive_power_state());
+
+        /* Lazy debouncing */
+        HAL_Delay(100);
+
+        if (drive_power_state()) {
+            con_printf("Drive powered on.\nOkay, here we go.\n");
+            return;
+        }
+    }
+}
+
+void wait_for_drive_disarm()
+{
+    con_printf("Disarm the drive now\n");
+
+    while(1) {
+        while (drive_power_state());
+
+        /* Lazy debouncing */
+        HAL_Delay(100);
+
+        if (!drive_power_state()) {
+            con_printf("Drive powered off.\n");
+            return;
+        }
+    }
+}
+
+void bmc_shut_down()
+{
+    bmc_idle();
+    wait_for_drive_disarm();
+    con_printf("Power down now.\n");
+    while(1);
 }

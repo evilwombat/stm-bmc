@@ -12,25 +12,15 @@
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 
+struct payload_header {
+    uint16_t size;
+    uint16_t body_crc;
+    uint8_t name[10];
+    uint16_t header_crc;
+} __attribute__((packed));
+
 #define PAYLOAD_MAX_SIZE    4096
 uint8_t __attribute__((section (".payloadBufferSection"))) payload_buf[PAYLOAD_MAX_SIZE];
-
-void wait_for_drive_disarm()
-{
-    con_printf("Disarm the drive now\n");
-
-    while(1) {
-        while (drive_power_state());
-
-        /* Lazy debouncing */
-        HAL_Delay(100);
-
-        if (!drive_power_state()) {
-            con_printf("Drive powered off.\n");
-            return;
-        }
-    }
-}
 
 void write_payload()
 {
@@ -69,37 +59,72 @@ void write_payload()
     wait_for_drive_disarm();
 }
 
-void load_payload()
+int load_payload()
 {
-    int num_blocks = 81;
+    int num_blocks = 0;
     int i, ret, error_count = 0;
+    uint16_t body_crc;
+    struct payload_header hdr;
 
     bmc_idle();
+    memset(&hdr, 0, sizeof(hdr));
     memset(payload_buf, 0, sizeof(payload_buf));
 
+    con_printf("Reading header...");
+
+    ret = block_read(0, (uint8_t*)&hdr, &error_count);
+    if (ret)  {
+        con_printf("\nHeader read failed\n");
+        bmc_shut_down();
+    }
+
+    if (crc16((uint8_t*)&hdr, sizeof(hdr) - 2) != hdr.header_crc) {
+        con_printf("\nHeader CRC is valid\n");
+        dump_buffer((uint8_t*) &hdr, sizeof(hdr));
+        bmc_shut_down();
+    }
+
+    con_printf(" OK!\n");
+    con_printf("Payload is %s\n", hdr.name);
+    con_printf("Size is %d bytes\n", hdr.size);
+
+    num_blocks = (hdr.size + BLOCK_LEN - 1) / BLOCK_LEN;
+
+    con_printf("Size %d blocks\n", num_blocks);
     con_printf("Reading payload\n");
-    con_printf("Total %d blocks\n", num_blocks);
 
     for (i = 0; i < num_blocks; i++) {
         con_printf("Reading block %d\r", i + 1);
-        ret = block_read(i, payload_buf + i * BLOCK_LEN, &error_count);
+        ret = block_read(i + 1, payload_buf + i * BLOCK_LEN, &error_count);
 
         if (ret != 0) {
             music_stop();
             con_printf("\nThat failed.\n");
             uart_printf("Unrecoverable error reading block %d\n", i);
-            bmc_idle();
-            wait_for_drive_disarm();
-            while(1);
+            bmc_shut_down();
         }
     }
 
     con_printf("\n");
     con_printf("Errors fixed: %d\n", error_count);
-    con_printf("Loading complete\n");
+
+    body_crc = crc16(payload_buf, hdr.size);
+
+    con_printf("CRC is %04x ", body_crc);
+
+    if (hdr.body_crc == body_crc) {
+        con_printf("- OK!\n");
+        con_printf("Loading complete\n");
+        ret = 0;
+    } else {
+        con_printf("- FAIL!\n");
+        con_printf("Loading complete???\n");
+        ret = -1;
+    }
 
     bmc_idle();
     wait_for_drive_disarm();
+    return ret;
 }
 
 void launch_payload()

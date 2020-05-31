@@ -39,6 +39,9 @@ void purge_major_loop();
 void safe_drive();
 void unsafe_drive();
 void bmc_idle();
+void bmc_shut_down();
+void wait_for_drive_arm();
+void wait_for_drive_disarm();
 
 int drive_power_state();
 void seek_to(int pos);

@@ -7,18 +7,6 @@
 
 const int sector_shifts[SECTOR_REDUNDANCY] = {0, 6, 12, 3, 9, 2, 7};
 
-unsigned short crc16(const unsigned char* data_p, unsigned char length){
-    unsigned char x;
-    unsigned short crc = 0xFFFF;
-
-    while (length--){
-        x = crc >> 8 ^ *data_p++;
-        x ^= x>>4;
-        crc = (crc << 8) ^ ((unsigned short)(x << 12)) ^ ((unsigned short)(x <<5)) ^ ((unsigned short)x);
-    }
-    return crc;
-}
-
 static void insert_crc(uint8_t *block_buf)
 {
     uint16_t crc = crc16(block_buf, BLOCK_LEN);

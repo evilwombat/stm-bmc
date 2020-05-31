@@ -31,33 +31,6 @@
 #include "loader.h"
 #include "selftest.h"
 
-void wait_for_drive_arm()
-{
-    if (drive_power_state()) {
-        safe_drive();
-        while(1) {
-            con_printf("YOU BOOTED UP WITH THE DRIVE ENABLED?! YOU IDIOT.\n");
-
-            HAL_Delay(100);
-        }
-    }
-
-    uart_printf("Waiting for drive safety switch\n");
-    con_printf("Arm the drive now\n");
-
-    while(1) {
-        while (!drive_power_state());
-
-        /* Lazy debouncing */
-        HAL_Delay(100);
-
-        if (drive_power_state()) {
-            con_printf("Drive powered on.\nOkay, here we go.\n");
-            return;
-        }
-    }
-}
-
 void check_drive_state()
 {
     if (!drive_power_state()) {
@@ -195,21 +168,12 @@ void warm_up_drive(int quick)
         if (test_abort_requested()) {
             con_clear();
             con_printf("Operation aborted\n");
-            shut_down();
+            bmc_shut_down();
         }
     }
 
     con_clear();
     con_printf("\rWarming up done!   \n");
-}
-
-
-void shut_down()
-{
-    bmc_idle();
-    wait_for_drive_disarm();
-    con_printf("Power down now.\n");
-    while(1);
 }
 
 static const char *main_menu[] = {
@@ -259,14 +223,14 @@ int app_main(void)
     if (choice == 3) {
         con_printf("Running sector tests\n");
         run_sector_tests();
-        shut_down();
+        bmc_shut_down();
     }
 
     /* Major loop test */
     if (choice == 4) {
         con_printf("Running sector tests\n");
         test_major_loop();
-        shut_down();
+        bmc_shut_down();
     }
 
     uart_printf("Running detector tests...\n");
@@ -278,7 +242,7 @@ int app_main(void)
         if (ret == SELFTEST_FAIL)
             con_printf("Warm-up test failed! Check detector calibration?\n");
 
-        shut_down();
+        bmc_shut_down();
     }
 
     bmc_idle();
@@ -286,7 +250,7 @@ int app_main(void)
     if (choice == 2) {
         con_printf("Writing payload\n");
         write_payload();
-        shut_down();
+        bmc_shut_down();
     }
 
     load_payload();
