@@ -1,3 +1,9 @@
 {
-	"folders": []
+	"folders": [],
+	"settings": {
+		"files.associations": {
+			"hash_map": "c",
+			"algorithm": "c"
+		}
+	}
 }
