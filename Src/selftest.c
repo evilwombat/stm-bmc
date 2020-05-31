@@ -8,7 +8,7 @@
 #include "block_io.h"
 #include "selftest.h"
 
-static int test_abort_requested()
+int test_abort_requested()
 {
     if (!encoder_pressed()) {
         return 0;

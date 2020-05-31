@@ -147,7 +147,7 @@ void gfx_draw_countdown(int value)
     int y = (LCD_HEIGHT - (scale * 8)) / 2;
     int x = (LCD_WIDTH - (scale * 17)) / 2;
 
-    gfx_draw_big_digit(x, y, scale, value / 10);
+    gfx_draw_big_digit(x, y, scale, (value / 10) % 10);
     gfx_draw_big_digit(x + scale * 9, y, scale, value % 10);
 }
 

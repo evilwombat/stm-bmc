@@ -78,10 +78,10 @@ void load_payload()
     memset(payload_buf, 0, sizeof(payload_buf));
 
     con_printf("Reading payload\n");
-    con_printf("Reading %d blocks\n", num_blocks);
+    con_printf("Total %d blocks\n", num_blocks);
 
     for (i = 0; i < num_blocks; i++) {
-        con_printf("Reading %03d\r", i);
+        con_printf("Reading block %d\r", i + 1);
         ret = block_read(i, payload_buf + i * BLOCK_LEN, &error_count);
 
         if (ret != 0) {
@@ -105,13 +105,20 @@ void load_payload()
 void launch_payload()
 {
     volatile uint32_t branch_destination = (uint32_t) payload_buf;
+    int i;
 
     wait_for_drive_disarm();
 
-    con_printf("Jumping to payload\n");
+    con_printf("Launching payload\n");
 
     __enable_irq();
-    HAL_Delay(500);
+    for (i = 3; i >= 0; i--) {
+        con_printf("\rin %d...", i);
+        HAL_Delay(1000);
+    }
+
+    con_printf("\nJumping to payload\n");
+
     __disable_irq();
 
     branch_destination |= 1;    /* Thumb */

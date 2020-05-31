@@ -159,7 +159,7 @@ void try_transfer_fancy()
     check_drive_state();
 }
 
-void warm_up_drive(int quick)
+void warm_up_drive_boring(int quick)
 {
     int i;
     int cycles = 100;
@@ -174,6 +174,35 @@ void warm_up_drive(int quick)
     }
     con_printf("\rWarming up done!   \n");
 }
+
+void warm_up_drive(int quick)
+{
+    int i;
+    int cycles = 100;
+
+    if (quick)
+        cycles = 10;
+
+    uart_printf("Warming up the drive coils (in case that helps)\n");
+    con_clear();
+    con_gotoxy(19, 0);
+    con_printf("WARMING UP NOW");
+    for (i = cycles; i >= 0; i--) {
+        gfx_draw_countdown(i);
+        lcd_update();
+        step_bubbles(10000);
+
+        if (test_abort_requested()) {
+            con_clear();
+            con_printf("Operation aborted\n");
+            shut_down();
+        }
+    }
+
+    con_clear();
+    con_printf("\rWarming up done!   \n");
+}
+
 
 void shut_down()
 {
@@ -221,8 +250,10 @@ int app_main(void)
 
     wait_for_drive_arm();
 
-    if (choice == 0 || choice == 1)
+    if (choice == 0 || choice == 1) {
+        music_start();
         warm_up_drive(choice == 1); /* Fast warmup? */
+    }
 
     /* Sector tests */
     if (choice == 3) {
@@ -242,10 +273,8 @@ int app_main(void)
 
     ret = warm_up_detector();
 
-    if (ret == 0) {
-        con_printf("Warm-up test OK\n");
-    } else {
-
+    if (ret != 0) {
+        music_stop();
         if (ret == SELFTEST_FAIL)
             con_printf("Warm-up test failed! Check detector calibration?\n");
 
@@ -260,7 +289,6 @@ int app_main(void)
         shut_down();
     }
 
-    music_start();
     load_payload();
     music_stop();
     launch_payload();
