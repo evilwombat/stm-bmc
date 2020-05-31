@@ -85,12 +85,12 @@ int load_payload()
     }
 
     con_printf(" OK!\n");
-    con_printf("Payload is %s\n", hdr.name);
+    con_printf("Payload is '%s'\n", hdr.name);
     con_printf("Size is %d bytes\n", hdr.size);
 
     num_blocks = (hdr.size + BLOCK_LEN - 1) / BLOCK_LEN;
 
-    con_printf("Size %d blocks\n", num_blocks);
+    con_printf("Size is %d blocks\n", num_blocks);
     con_printf("Reading payload\n");
 
     for (i = 0; i < num_blocks; i++) {
@@ -110,7 +110,7 @@ int load_payload()
 
     body_crc = crc16(payload_buf, hdr.size);
 
-    con_printf("CRC is %04x ", body_crc);
+    con_printf("CRC is %04X ", body_crc);
 
     if (hdr.body_crc == body_crc) {
         con_printf("- OK!\n");
