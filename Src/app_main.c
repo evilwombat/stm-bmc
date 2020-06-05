@@ -188,6 +188,9 @@ static const char *main_menu[] = {
 int app_main(void)
 {
     int i, ret, choice;
+
+    safe_drive();
+
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
@@ -198,14 +201,18 @@ int app_main(void)
     lcd_init();
     con_init();
 
+    con_set_font(&font_3x5);
+    con_clear();
+    con_printf("STM32 Bubble Memory Controller\n\n");
+
     __enable_irq();
     HAL_Delay(200);
 
-    con_clear();
     bubble_storage_init();
-    detector_init();
 
+    HAL_Delay(2000);
     con_clear();
+    con_set_font(&font_5x7);
     con_printf(" ARM Bubble System \\\n");
     con_set_font(&font_3x5);
     con_printf("  github.com/evilwombat");
@@ -232,7 +239,7 @@ int app_main(void)
 
     /* Major loop test */
     if (choice == 4) {
-        con_printf("Running sector tests\n");
+        con_printf("Testing major loop\n");
         test_major_loop();
         bmc_shut_down();
     }

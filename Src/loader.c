@@ -85,16 +85,16 @@ int load_payload()
     }
 
     con_printf(" OK!\n");
-    con_printf("Payload is '%s'\n", hdr.name);
-    con_printf("Size is %d bytes\n", hdr.size);
+    con_printf("Payload: '%s'\n", hdr.name);
+    con_printf("Size: %d bytes\n", hdr.size);
 
     num_blocks = (hdr.size + BLOCK_LEN - 1) / BLOCK_LEN;
 
-    con_printf("Size is %d blocks\n", num_blocks);
+//    con_printf("Size is %d blocks\n", num_blocks);
     con_printf("Reading payload\n");
 
     for (i = 0; i < num_blocks; i++) {
-        con_printf("Reading block %d\r", i + 1);
+        con_printf("Reading block %d/%d\r", i + 1, num_blocks);
         ret = block_read(i + 1, payload_buf + i * BLOCK_LEN, &error_count);
 
         if (ret != 0) {
@@ -123,7 +123,7 @@ int load_payload()
     }
 
     bmc_idle();
-    wait_for_drive_disarm();
+//    wait_for_drive_disarm();
     return ret;
 }
 

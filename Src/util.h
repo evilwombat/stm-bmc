@@ -11,4 +11,6 @@ void uart_printf(const char *fmt, ...);
 void detector_init();
 void detector_reset();
 int detector_read();
+int detector_poll();
+
 uint16_t crc16(const uint8_t *data_p, int length);

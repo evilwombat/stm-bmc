@@ -55,6 +55,10 @@ int detector_read()
     return !!(EXTI->PR & BIT(11));
 }
 
+int detector_poll()
+{
+    return !!(GPIOA->IDR & BIT(11));
+}
 /*
 void counter_init()
 {

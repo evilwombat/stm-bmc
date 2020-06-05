@@ -208,22 +208,30 @@ int block_read(int block_num, uint8_t *block_buf, int *error_count)
 
 void bubble_storage_init()
 {
-    uart_printf("STM32 Bubble Memory Controller  :)\n");
-    uart_printf("Major loop size: %d bubble positions\n", MAJOR_LOOP_LEN);
-    uart_printf("Minor loop size: %d bubble positions\n", MINOR_LOOP_LEN);
-    uart_printf("Generator to Transfer gate: %d bubble positions\n", GEN_TO_XFER_GATE);
-    uart_printf("Transfer gate to Annihilation gate: %d bubble positions\n", XFER_GATE_TO_DET);
-    uart_printf("Annihilation gate to Detector: %d bubble positions\n", DETECTOR_PRERUN_LEN);
+    con_printf("Setting up function driver DMA\n");
+    sequencer_init();
+
+    detector_init();
+    con_printf("Checking detector - ");
+
+    if (detector_poll() != 0) {
+        con_printf("\nDetector is HIGH?!\nCheck detector bias voltage\n");
+        while(1);
+    }
+
+    con_printf("OK!\n");
+
+    con_printf("Major/minor loop:%d/%d bubbles\n", MAJOR_LOOP_LEN, MINOR_LOOP_LEN);
+    con_printf("Gen to Xfer gate: %d bubbles\n", GEN_TO_XFER_GATE);
+    con_printf("Xfer to Annihilation gate: %d bubbls\n", XFER_GATE_TO_DET);
+    con_printf("Ann gate to Detector: %d bubbles\n", DETECTOR_PRERUN_LEN);
+    con_printf("Block redundancy: %d sectors\n", SECTOR_REDUNDANCY);
+    con_printf("Capacity: %d blocks/%d bytes\n", NUM_BLOCKS, NUM_BLOCKS * BLOCK_LEN);
+
     uart_printf("Test sector: %d\n", TEST_SECTOR);
     uart_printf("Start sector: %d\n", START_SECTOR);
-    uart_printf("Sector redundancy: %d\n", SECTOR_REDUNDANCY);
     uart_printf("Sector length: %d bytes\n", SECTOR_LEN);
     uart_printf("Block length: %d bytes\n", BLOCK_LEN);
-    uart_printf("Usable capacity: %d blocks (%d bytes)\n", NUM_BLOCKS, NUM_BLOCKS * BLOCK_LEN);
-    uart_printf("Setting up bubble detector\n");
-    detector_init();
-
-    uart_printf("Setting up function sequencer DMA\n");
-    sequencer_init();
+    
     safe_drive();
 }

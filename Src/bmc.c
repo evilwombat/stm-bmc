@@ -409,14 +409,14 @@ void bmc_idle()
 
 void wait_for_drive_arm()
 {
-    if (drive_power_state()) {
+   /* if (drive_power_state()) {
         safe_drive();
         while(1) {
             con_printf("YOU BOOTED UP WITH THE DRIVE ENABLED?! YOU IDIOT.\n");
 
             HAL_Delay(100);
         }
-    }
+    }*/
 
     uart_printf("Waiting for drive safety switch\n");
     con_printf("Arm the drive circuit\n");

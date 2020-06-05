@@ -15,7 +15,7 @@
 
 #define SECTOR_REDUNDANCY   7
 
-#define NUM_BLOCKS          128
+#define NUM_BLOCKS          ((MINOR_LOOP_LEN - 1) / SECTOR_REDUNDANCY)
 #define START_SECTOR        1
 
 #define TEST_SECTOR         0

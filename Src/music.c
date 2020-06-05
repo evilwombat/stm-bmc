@@ -137,7 +137,7 @@ void handle_systick_music()
         return;
     }
 
-    music_state.cooldown = 30;
+    music_state.cooldown = 32;
     music_step();
 }
 
