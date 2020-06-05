@@ -12,7 +12,7 @@ extern const uint16_t test_pattern_standard[];
 extern const uint16_t test_pattern_extra[];
 
 int test_major_loop();
-int test_sector_io(const uint16_t *patterns, int num_patterns);
+int test_sector_io(const uint16_t *patterns, int num_patterns, int success_count);
 
 int warm_up_detector();
 void run_sector_tests();

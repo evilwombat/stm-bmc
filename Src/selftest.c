@@ -127,11 +127,20 @@ int test_sector(int sector, uint16_t pattern)
     return ret;
 }
 
-int test_sector_io(const uint16_t *patterns, int num_patterns)
+int test_sector_io(const uint16_t *patterns, int num_patterns, int success_passes)
 {
     int result = 0;
     int i, ret;
     for (i = 0; i < num_patterns; i++) {
+
+        if (success_passes != -1) {
+
+            if (result == 0)
+                con_printf("Self-test %d/%d - P%d/%d\r", success_passes + 1, NUM_WARMUP_TEST_RUNS, i, num_patterns);
+            else
+                con_printf("Self-test %d/%d - FAIL\r", success_passes + 1, NUM_WARMUP_TEST_RUNS);
+        }
+
         ret = test_sector(TEST_SECTOR, patterns[i]);
 
         if (ret)
@@ -139,6 +148,7 @@ int test_sector_io(const uint16_t *patterns, int num_patterns)
 
         if (test_abort_requested()) {
             bmc_idle();
+            con_printf("Self-test %d/%d - ABORT\n", success_passes + 1, NUM_WARMUP_TEST_RUNS);
             return SELFTEST_ABORTED;
         }
 
@@ -147,10 +157,13 @@ int test_sector_io(const uint16_t *patterns, int num_patterns)
 
     bmc_idle();
 
-    if (result == 0)
+    if (result == 0) {
+        con_printf("Self-test %d/%d - PASS\n", success_passes + 1, NUM_WARMUP_TEST_RUNS);
         return SELFTEST_PASS;
-    else
+    } else {
+        con_printf("Self-test %d/%d - FAIL\n", success_passes + 1, NUM_WARMUP_TEST_RUNS);
         return SELFTEST_FAIL;
+    }
 }
 
 void run_sector_tests()
@@ -160,7 +173,7 @@ void run_sector_tests()
     int success_run = 0;
     do {
         iter++;
-        ret = test_sector_io(test_pattern_standard, ARRAY_SIZE(test_pattern_standard));
+        ret = test_sector_io(test_pattern_standard, ARRAY_SIZE(test_pattern_standard), -1);
 
         if (ret == SELFTEST_PASS) {
             success_run++;
@@ -185,8 +198,8 @@ int warm_up_detector()
     bmc_read_raw(TEST_SECTOR, read_buf, SECTOR_LEN * 8);
 
     while(i < 500) {
-        con_printf("\rSelf-test %d/%d...", success_run, NUM_WARMUP_TEST_RUNS);
-        ret = test_sector_io(test_pattern_standard, ARRAY_SIZE(test_pattern_standard));
+     //   con_printf("\rSelf-test %d/%d...", success_run, NUM_WARMUP_TEST_RUNS);
+        ret = test_sector_io(test_pattern_standard, ARRAY_SIZE(test_pattern_standard), success_run);
 
         if (ret == SELFTEST_ABORTED) {
             return ret;
