@@ -10,7 +10,6 @@ static int minor_loop_position = 0;
 /* PORT A */
 #define PIN_DRIVE_STATE 15
 
-
 /* PORT B */
 #define PIN_SAFETY  0
 
@@ -29,6 +28,7 @@ static int minor_loop_position = 0;
 #define DRV_A3      5
 #define DRV_A4      6
 
+/* See STM32 BSRR register spec */
 #define ON(b)       BIT(b)
 #define OFF(b)      BIT((b) + 16)
 
@@ -48,71 +48,66 @@ static int minor_loop_position = 0;
 #define CYA_END     DRIVE_OFF(DRV_EN_34)
 #define CYB_END     DRIVE_OFF(DRV_EN_34)
 
-#define XD  -3
-#define YD  -3
+#define CX_OFFSET  (-3)
+#define CY_OFFSET  (-3)
 
-#define CX_WIDTH    12
-#define CY_WIDTH    12
+#define CX_LENGTH  (12)
+#define CY_LENGTH  (12)
 
 #define XA                                      \
-    seq[pos + XD] |= CXA_START;                 \
-    seq[pos + XD + CX_WIDTH] |= CXA_END;        \
+    seq[pos + CX_OFFSET] |= CXA_START;          \
+    seq[pos + CX_OFFSET + CX_LENGTH] |= CXA_END;\
     pos += 10;                                  \
-
 
 #define YA                                      \
-    seq[pos + YD] |= CYA_START;                 \
-    seq[pos + YD + CY_WIDTH] |= CYA_END;        \
+    seq[pos + CY_OFFSET] |= CYA_START;          \
+    seq[pos + CY_OFFSET + CY_LENGTH] |= CYA_END;\
     pos += 10;                                  \
-
 
 #define XB                                      \
-    seq[pos + XD] |= CXB_START;                 \
-    seq[pos + XD + CX_WIDTH] |= CXB_END;        \
+    seq[pos + CX_OFFSET] |= CXB_START;          \
+    seq[pos + CX_OFFSET + CX_LENGTH] |= CXB_END;\
     pos += 10;                                  \
-
 
 #define YB                                      \
-    seq[pos + YD] |= CYB_START;                 \
-    seq[pos + YD + CY_WIDTH] |= CYB_END;        \
+    seq[pos + CY_OFFSET] |= CYB_START;          \
+    seq[pos + CY_OFFSET + CY_LENGTH] |= CYB_END;\
     pos += 10;                                  \
 
-#define GEN                                     \
-    if (func & FUNC_GEN) {                      \
-        seq[pos + 1] |= OFF(PIN_GEN);           \
-        seq[pos + 2] |= ON(PIN_GEN);            \
+#define GEN_START   (1)
+#define GEN_LENGTH  (1)
+
+#define ANN_START   (14 - 3)
+#define ANN_LENGTH  (19 + 3)
+
+#define XIN_OFFSET  (-2)
+#define XIN_LENGTH  (14)
+
+#define XOUT_OFFSET (19 - 2)
+#define XOUT_LENGTH (11)
+
+void insert_function_pulse(uint32_t *seq, int func, int pos)
+{
+    if (func & FUNC_GEN) {
+        seq[pos + GEN_START] |= OFF(PIN_GEN);
+        seq[pos + GEN_START + GEN_LENGTH] |= ON(PIN_GEN);
     }
 
-#define AO  -3
-
-#define ANN                                     \
-    if (func & FUNC_ANN) {                      \
-        seq[pos + 14 + AO] |= OFF(PIN_ANN);     \
-        seq[pos + 14 + 19 + AO + 3] |= ON(PIN_ANN);  \
+    if (func & FUNC_ANN) {
+        seq[pos + ANN_START] |= OFF(PIN_ANN);
+        seq[pos + ANN_START + ANN_LENGTH] |= ON(PIN_ANN);
     }
 
-
-#define XIO     -2
-#define XOO     -2
-
-#define XIP     0
-#define XIL     14
-
-#define XOP     19
-#define XOL     11
-
-#define XIN                                         \
-    if (func & FUNC_XIN) {                          \
-        seq[pos + XIP + XIO] |= OFF(PIN_XIN);        \
-        seq[pos + XIP + XIL + XIO] |= ON(PIN_XIN);  \
+    if (func & FUNC_XIN) {
+        seq[pos + XIN_OFFSET] |= OFF(PIN_XIN);
+        seq[pos + XIN_OFFSET + XIN_LENGTH] |= ON(PIN_XIN);
     }
 
-#define XOUT                                        \
-    if (func & FUNC_XOUT) {                         \
-        seq[pos + XOP + XOO] |= OFF(PIN_XOUT);       \
-        seq[pos + XOP + XOL + XOO] |= ON(PIN_XOUT);  \
+    if (func & FUNC_XOUT) {
+        seq[pos + XOUT_OFFSET] |= OFF(PIN_XOUT);
+        seq[pos + XOUT_OFFSET + XOUT_LENGTH] |= ON(PIN_XOUT);
     }
-
+}
 
 static void generate_function_timings(uint32_t *seq, int func)
 {
@@ -123,36 +118,8 @@ static void generate_function_timings(uint32_t *seq, int func)
     pos += 10;
 
     YA
-    GEN; ANN; XIN; XOUT
-    XB
-    YB
-//    XOUT;
-    XA
-    YA
-
-    if (func & FUNC_STR) {
-       seq[cxb_edge + 7] |= ON(PIN_STROBE);
-       seq[cxb_edge + 8 + 20] |= OFF(PIN_STROBE);
-    }
-}
-
-
-static void generate_function_timings_2x(uint32_t *seq, int func)
-{
-    int pos = 0;
-    int cxb_edge = 0;
-
-    seq[pos] =  ON(PIN_GEN) | ON(PIN_ANN) | ON(PIN_XIN) | ON(PIN_XOUT) | DRIVE_IDLE;
-    pos += 10;
-
-    YA
-    GEN; ANN;
-   // XIN; XOUT;
-    XB
-    YB
-    XA
-    YA
-
+    cxb_edge = pos;
+    insert_function_pulse(seq, func, pos);
     XB
     YB
     XA
@@ -187,38 +154,16 @@ int run_function(int func)
     return bit;
 }
 
-int run_function_2x(int func)
-{
-    int bit;
-    memset(seq, 0, SEQ_SIZE);
-
-    __disable_irq();
-
-    detector_reset();
-    generate_function_timings_2x(seq, func);
-
-    unsafe_drive();
-    sequencer_run(seq, SEQ_SIZE);
-    safe_drive();
-    step_loop_counter();
-    step_loop_counter();
-    bit = detector_read();
-    detector_reset();
-    return bit;
-}
-
 void generate_bubbles(const uint8_t *data, int count)
 {
     int i;
     for (i = 0; i < count; i++) {
-        if (get_bit(data, i)) {
+        if (get_bit(data, i))
             run_function(FUNC_GEN);
-//            run_function(FUNC_GEN);
-        } else {
+        else
             run_function(0);
-//            run_function(0);
-        }
 
+        /* In the major loop, bubbles are at every other position. Minor loops exist at every other position also. */
         run_function(0);
     }
 }
