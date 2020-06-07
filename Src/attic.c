@@ -3,6 +3,9 @@
 #include "bmc.h"
 #include "block_io.h"
 #include "util.h"
+#include "selftest.h"
+#include "console.h"
+#include "gfx_util.h"
 
 void try_transfer_raw()
 {
@@ -536,4 +539,65 @@ void try_transfer()
     check_drive_state();
     HAL_Delay(2000);
     check_drive_state();
+}
+
+void try_transfer_fancy()
+{
+//    int write_target = 0;
+    int read_target = 0;
+/*
+    con_printf("\nWriting blocks...\n");
+    while(write_target < 16) {
+        test_write_block(write_target + 0);
+        write_target++;
+        check_drive_state();
+    }
+*/
+    bmc_idle();
+
+    uart_printf("\nMoment of truth...\n");
+
+    uart_printf("\n\nReading blocks...\n");
+    con_clear();
+
+    while(read_target < 16) {
+        test_read_block(read_target + 0, 1);
+
+        gfx_draw_countdown(read_target * 2);
+        lcd_update();
+
+        test_read_block(read_target + 0, 1);
+
+        gfx_draw_countdown(read_target * 2 + 1);
+        lcd_update();
+
+        read_target++;
+        check_drive_state();
+    }
+
+    con_clear();
+    uart_printf("\n\nMoving minor loops to the initial position\n");
+    bmc_idle();
+
+    uart_printf("It is now safe to power down the drive circuit\n");
+    con_printf("Disarm drive now.\n");
+    check_drive_state();
+    HAL_Delay(2000);
+    check_drive_state();
+}
+
+void warm_up_drive_boring(int quick)
+{
+    int i;
+    int cycles = 100;
+
+    if (quick)
+        cycles = 10;
+
+    uart_printf("Warming up the drive coils (in case that helps)\n");
+    for (i = cycles; i >= 0; i--) {
+        con_printf("\rWarming up (%d)...  ", i);
+        step_bubbles(10000);
+    }
+    con_printf("\rWarming up done!   \n");
 }

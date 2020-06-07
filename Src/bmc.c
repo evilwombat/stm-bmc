@@ -352,16 +352,87 @@ void bmc_idle()
     seek_to(0);
 }
 
+/* Minor loops are numbered from 1 */
+int defective_loop_map[] = {
+    /*0x01,*/ 0x02, 0x03, 0x04, 0x05,
+    0x06, 0x15, 0x19, 0x21, 0x35,
+    0x3A, 0x3B, 0x41, 0x00
+};
+
+static int loop_is_bad(int loop_num)
+{
+    int i = 0;
+    while (defective_loop_map[i] != 0) {
+        if (defective_loop_map[i] == loop_num)
+            return 1;
+
+        i++;
+    }
+
+    return 0;
+}
+
+void bmc_read_sector_raw(int loop_pos, uint8_t *buf, int num_bits)
+{
+    uint8_t unpacked_buf[LOOP_BUFFER_LEN];
+    int i, cur_bit = 0;
+    memset(unpacked_buf, 0, sizeof(unpacked_buf));
+    memset(buf, 0, bits_to_bytes(num_bits));
+
+    bmc_read_raw(loop_pos, unpacked_buf, NUM_MINOR_LOOPS);
+
+    for (i = 0; i < NUM_MINOR_LOOPS; i++) {
+        /* Loops are numbered from 1 in the TI specs */
+        if (loop_is_bad(i + 1))
+            continue;
+
+        if (cur_bit >= num_bits)
+            return;
+
+        set_bit(buf, cur_bit, get_bit(unpacked_buf, i));
+        cur_bit++;
+    }
+}
+
+int bmc_write_sector_raw(int loop_pos, const uint8_t *buf, int num_bits)
+{
+    uint8_t unpacked_buf[LOOP_BUFFER_LEN];
+    int i, cur_bit = 0;
+    memset(unpacked_buf, 0, sizeof(unpacked_buf));
+
+    for (i = 0; i < NUM_MINOR_LOOPS; i++) {
+        /* Loops are numbered from 1 in the TI specs */
+        if (loop_is_bad(i + 1))
+            continue;
+
+        if (cur_bit >= num_bits)
+            break;
+
+        set_bit(unpacked_buf, i, get_bit(buf, cur_bit));
+        cur_bit++;
+    }
+
+//    dump_buffer_msg(buf, 18, "req");
+//    dump_buffer_msg(unpacked_buf, 18, "raw");
+
+    int ret = bmc_write_raw(loop_pos, unpacked_buf, NUM_MINOR_LOOPS);
+
+    if (ret) {
+        uart_printf("Sector write failed to loop pos %d\n", loop_pos);
+    }
+    return ret;
+}
+
 void wait_for_drive_arm()
 {
-   /* if (drive_power_state()) {
+    if (drive_power_state()) {
         safe_drive();
         while(1) {
             con_printf("YOU BOOTED UP WITH THE DRIVE ENABLED?! YOU IDIOT.\n");
 
             HAL_Delay(100);
         }
-    }*/
+    }
 
     uart_printf("Waiting for drive safety switch\n");
     con_printf("Arm the drive circuit\n");

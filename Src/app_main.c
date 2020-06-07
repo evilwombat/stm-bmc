@@ -87,67 +87,6 @@ void test_write_block(int block)
     }
 }
 
-void try_transfer_fancy()
-{
-    int write_target = 0;
-    int read_target = 0;
-/*
-    con_printf("\nWriting blocks...\n");
-    while(write_target < 16) {
-        test_write_block(write_target + 0);
-        write_target++;
-        check_drive_state();
-    }
-*/
-    bmc_idle();
-
-    uart_printf("\nMoment of truth...\n");
-
-    uart_printf("\n\nReading blocks...\n");
-    con_clear();
-
-    while(read_target < 16) {
-        test_read_block(read_target + 0, 1);
-
-        gfx_draw_countdown(read_target * 2);
-        lcd_update();
-
-        test_read_block(read_target + 0, 1);
-
-        gfx_draw_countdown(read_target * 2 + 1);
-        lcd_update();
-
-        read_target++;
-        check_drive_state();
-    }
-
-    con_clear();
-    uart_printf("\n\nMoving minor loops to the initial position\n");
-    bmc_idle();
-
-    uart_printf("It is now safe to power down the drive circuit\n");
-    con_printf("Disarm drive now.\n");
-    check_drive_state();
-    HAL_Delay(2000);
-    check_drive_state();
-}
-
-void warm_up_drive_boring(int quick)
-{
-    int i;
-    int cycles = 100;
-
-    if (quick)
-        cycles = 10;
-
-    uart_printf("Warming up the drive coils (in case that helps)\n");
-    for (i = cycles; i >= 0; i--) {
-        con_printf("\rWarming up (%d)...  ", i);
-        step_bubbles(10000);
-    }
-    con_printf("\rWarming up done!   \n");
-}
-
 void warm_up_drive(int quick)
 {
     int i;
@@ -187,7 +126,7 @@ static const char *main_menu[] = {
 
 int app_main(void)
 {
-    int i, ret, choice;
+    int ret, choice;
 
     safe_drive();
 
@@ -269,6 +208,6 @@ int app_main(void)
     launch_payload();
     while(1);
 
-    while(1)
-        try_transfer_fancy();
+//    while(1)
+//        try_transfer_fancy();
 }
