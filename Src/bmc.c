@@ -133,7 +133,7 @@ static void generate_function_timings(uint32_t *seq, int func)
 
 uint32_t seq[SEQ_SIZE];
 
-int run_function(int func)
+int run_function(int func, int detect)
 {
     int bit;
     memset(seq, 0, SEQ_SIZE);
@@ -142,7 +142,7 @@ int run_function(int func)
     generate_function_timings(seq, func);
 
     unsafe_drive();
-    sequencer_run(seq, SEQ_SIZE);
+    sequencer_run(seq, detect ? SEQ_SIZE : 80);
     safe_drive();
 
     step_loop_counter();
@@ -159,12 +159,12 @@ void generate_bubbles(const uint8_t *data, int count)
     int i;
     for (i = 0; i < count; i++) {
         if (get_bit(data, i))
-            run_function(FUNC_GEN);
+            run_function(FUNC_GEN, 0);
         else
-            run_function(0);
+            run_function(0, 0);
 
         /* In the major loop, bubbles are at every other position. Minor loops exist at every other position also. */
-        run_function(0);
+        run_function(0, 0);
     }
 }
 
@@ -203,8 +203,8 @@ void read_bubbles_raw(uint8_t *data, int count)
             func |= FUNC_STR;
         }
 
-        bit = run_function(func);
-        bit |= run_function(FUNC_ANN);
+        bit = run_function(func, 1);
+        bit |= run_function(FUNC_ANN, 1);
 
         set_bit(data, i, bit);
     }
@@ -214,7 +214,7 @@ void repeat_func(int steps, int func)
 {
     int i;
     for (i = 0; i < steps; i++)
-        run_function(func);
+        run_function(func, 0);
 }
 
 void step_bubbles(int steps)
@@ -300,7 +300,7 @@ static void bmc_read_raw(int loop_pos, uint8_t *buf, int num_bits)
     seek_to(loop_pos);
 
     step_bubbles(1);
-    run_function(FUNC_XOUT);
+    run_function(FUNC_XOUT, 0);
 
     step_bubbles(XFER_GATE_TO_DET);
 
@@ -333,7 +333,7 @@ static int bmc_write_raw(int loop_pos, const uint8_t *buf, int num_bits)
     generate_bubbles_and_align(buf, num_bits);
 
     step_bubbles(1);
-    run_function(FUNC_XIN);
+    run_function(FUNC_XIN, 0);
 
     step_bubbles(XFER_GATE_TO_DET);
 
