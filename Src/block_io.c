@@ -30,7 +30,7 @@ static int verify_crc(uint8_t *block_buf)
 
 int bmc_read_sector(int loop_pos, uint8_t *buf)
 {
-    bmc_read_raw(loop_pos, buf, SECTOR_LEN * 8);
+    bmc_read_sector_raw(loop_pos, buf, SECTOR_LEN * 8);
 
     return verify_crc(buf);;
 }
@@ -38,7 +38,7 @@ int bmc_read_sector(int loop_pos, uint8_t *buf)
 int bmc_write_sector(int loop_pos, uint8_t *buf)
 {
     insert_crc(buf);
-    return bmc_write_raw(loop_pos, buf, SECTOR_LEN * 8);
+    return bmc_write_sector_raw(loop_pos, buf, SECTOR_LEN * 8);
 }
 
 static void shift_sector(uint8_t *buf, int amount)
@@ -78,7 +78,7 @@ static int restore_sectors(int block_num, const uint8_t *block_buf, int redundan
             memcpy(sector_buf, block_buf, BLOCK_LEN);
             insert_crc(sector_buf);
             shift_sector(sector_buf, sector_shifts[i]);
-            if (bmc_write_raw(sector_index(block_num, i), sector_buf, SECTOR_LEN * 8))
+            if (bmc_write_sector_raw(sector_index(block_num, i), sector_buf, SECTOR_LEN * 8))
                 ret++;
         }
     }
@@ -92,13 +92,14 @@ void block_erase(int block_num)
     int i;
 
     for (i = 0; i < SECTOR_REDUNDANCY; i++) {
-        bmc_read_raw(sector_index(block_num, i), sector_buf, SECTOR_LEN * 8);
+        bmc_read_sector_raw(sector_index(block_num, i), sector_buf, SECTOR_LEN * 8);
     }
 }
 
 int block_write(int block_num, const uint8_t *block_buf)
 {
-    return restore_sectors(block_num, block_buf, -1);
+    if (restore_sectors(block_num, block_buf, -1))
+        return restore_sectors(block_num, block_buf, -1);
 }
 
 static void combine_sector_buffers(uint8_t *dest, uint8_t *src)
@@ -127,7 +128,7 @@ int block_read(int block_num, uint8_t *block_buf, int *error_count)
         read_mask |= BIT(attempt);
 
         memset(sector_buf, 0, sizeof(sector_buf));
-        bmc_read_raw(sector_index(block_num, attempt), sector_buf, SECTOR_LEN * 8);
+        bmc_read_sector_raw(sector_index(block_num, attempt), sector_buf, SECTOR_LEN * 8);
         shift_sector(sector_buf, -sector_shifts[attempt]);
 
         if (verify_crc(sector_buf) == 0) {
@@ -140,7 +141,7 @@ int block_read(int block_num, uint8_t *block_buf, int *error_count)
         dump_buffer(sector_buf, sizeof(sector_buf));
 
         memset(sector_buf_retry, 0, sizeof(sector_buf_retry));
-        bmc_read_raw(sector_index(block_num, attempt), sector_buf_retry, SECTOR_LEN * 8);
+        bmc_read_sector_raw(sector_index(block_num, attempt), sector_buf_retry, SECTOR_LEN * 8);
         shift_sector(sector_buf_retry, -sector_shifts[attempt]);
 
         uart_printf("Second read of block %d try %d: ", block_num, attempt);

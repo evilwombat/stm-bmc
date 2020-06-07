@@ -291,7 +291,7 @@ int bits_to_bytes(int num_bits)
     return (num_bits + 7) / 8;
 }
 
-void bmc_read_raw(int loop_pos, uint8_t *buf, int num_bits)
+static void bmc_read_raw(int loop_pos, uint8_t *buf, int num_bits)
 {
     uint8_t repeat_buf[BITBUFFER_SIZE];
     int cur_pos = 0, i;
@@ -320,7 +320,7 @@ void bmc_read_raw(int loop_pos, uint8_t *buf, int num_bits)
     }
 }
 
-int bmc_write_raw(int loop_pos, uint8_t *buf, int num_bits)
+static int bmc_write_raw(int loop_pos, const uint8_t *buf, int num_bits)
 {
     uint8_t read_buf[BITBUFFER_SIZE];
     int i;

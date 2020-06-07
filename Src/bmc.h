@@ -29,6 +29,16 @@ void unsafe_drive();
 /* We assume that "Transfer" is a two-cycle operation */
 #define XFER_GATE_TO_DET    66
 
+/* Total number of minor loops, including bad loops */
+#define NUM_MINOR_LOOPS     157
+
+/* Effectively the sector size, in bits, excluding bad loops */
+#define NUM_USABLE_LOOPS    144
+
+
+/* In bytes, taking defective loop positions into account */
+#define LOOP_BUFFER_LEN     20
+
 void generate_bubbles(const uint8_t *data, int count);
 void generate_bubbles_and_align(const uint8_t *data, int count);
 void read_bubbles(uint8_t *data, int count);
@@ -48,5 +58,5 @@ void seek_to(int pos);
 void seek_by(int count);
 int get_loop_position();
 
-void bmc_read_raw(int loop_pos, uint8_t *buf, int num_bits);
-int bmc_write_raw(int loop_pos, uint8_t *buf, int num_bits);
+void bmc_read_sector_raw(int loop_pos, uint8_t *buf, int num_bits);
+int bmc_write_sector_raw(int loop_pos, const uint8_t *buf, int num_bits);

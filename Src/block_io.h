@@ -11,7 +11,7 @@
 #define SERCTOR_CRC_OFFSET    BLOCK_LEN
 
 /* Including CRC and possibly gaps for minor loops */
-#define SECTOR_LEN          19
+#define SECTOR_LEN          18
 
 #define SECTOR_REDUNDANCY   7
 

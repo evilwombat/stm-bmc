@@ -111,17 +111,17 @@ int test_sector(int sector, uint16_t pattern)
             write_buf[i] = pattern >> 8;
     }
 
-    bmc_read_raw(sector, read_buf, SECTOR_LEN * 8);
-    bmc_write_raw(sector, write_buf, SECTOR_LEN * 8);
-    bmc_read_raw(sector, read_buf, SECTOR_LEN * 8);
+    bmc_read_sector_raw(sector, read_buf, SECTOR_LEN * 8);
+    bmc_write_sector_raw(sector, write_buf, SECTOR_LEN * 8);
+    bmc_read_sector_raw(sector, read_buf, SECTOR_LEN * 8);
 
     ret = (memcmp(read_buf, write_buf, SECTOR_LEN) != 0);
 
     if (ret) {
         uart_printf("Failure dump: ");
         dump_buffer(read_buf, SECTOR_LEN - 1);
-        bmc_read_raw(sector, read_buf, SECTOR_LEN * 8);
-        bmc_read_raw(sector, read_buf, SECTOR_LEN * 8);
+        bmc_read_sector_raw(sector, read_buf, SECTOR_LEN * 8);
+        bmc_read_sector_raw(sector, read_buf, SECTOR_LEN * 8);
     }
 
     return ret;
@@ -195,7 +195,7 @@ int warm_up_detector()
     uint8_t read_buf[SECTOR_LEN];
 
     purge_major_loop();
-    bmc_read_raw(TEST_SECTOR, read_buf, SECTOR_LEN * 8);
+    bmc_read_sector_raw(TEST_SECTOR, read_buf, SECTOR_LEN * 8);
 
     while(i < 500) {
      //   con_printf("\rSelf-test %d/%d...", success_run, NUM_WARMUP_TEST_RUNS);
