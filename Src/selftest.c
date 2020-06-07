@@ -89,6 +89,7 @@ const uint16_t test_pattern_standard[] = {
     0xaa55,
     0x55aa,
     0x0101,
+    0x0001,
 };
 
 const uint16_t test_pattern_extra[] = {
@@ -96,15 +97,26 @@ const uint16_t test_pattern_extra[] = {
     0x0101,
 };
 
+int count_ones(const uint8_t *buf, int num_bits)
+{
+    int count = 0, i;
+    for (i = 0; i < num_bits; i++)
+        if (get_bit(buf, i))
+            count++;
+
+    return count;
+}
+
 int test_sector(int sector, uint16_t pattern)
 {
     uint8_t read_buf[SECTOR_LEN];
     uint8_t write_buf[SECTOR_LEN];
-    int i, ret;
+    int i, ret, expected_ones, actual_ones;
 
     memset(read_buf, 0, sizeof(read_buf));
+    memset(write_buf, 0, sizeof(write_buf));
 
-    for (i = 0; i < SECTOR_LEN - 1; i++) {
+    for (i = 0; i < SECTOR_LEN; i++) {
         if (i & 0x01)
             write_buf[i] = pattern;
         else
@@ -113,15 +125,28 @@ int test_sector(int sector, uint16_t pattern)
 
     bmc_read_sector_raw(sector, read_buf, SECTOR_LEN * 8);
     bmc_write_sector_raw(sector, write_buf, SECTOR_LEN * 8);
+
+    memset(read_buf, 0, sizeof(read_buf));
     bmc_read_sector_raw(sector, read_buf, SECTOR_LEN * 8);
 
     ret = (memcmp(read_buf, write_buf, SECTOR_LEN) != 0);
 
     if (ret) {
+        dump_buffer_msg(write_buf, SECTOR_LEN, "Write");
+        dump_buffer_msg(read_buf,  SECTOR_LEN, "Read");
+
+        expected_ones = count_ones(write_buf, SECTOR_LEN * 8);
+        actual_ones = count_ones(read_buf, SECTOR_LEN * 8);
+
+        bmc_read_sector_raw(sector, read_buf, SECTOR_LEN * 8);
+        bmc_read_sector_raw(sector, read_buf, SECTOR_LEN * 8);
+
+        uart_printf("-----\n");
+        uart_printf("FAILURE on pattern %04x\n", pattern);
         uart_printf("Failure dump: ");
         dump_buffer(read_buf, SECTOR_LEN - 1);
-        bmc_read_sector_raw(sector, read_buf, SECTOR_LEN * 8);
-        bmc_read_sector_raw(sector, read_buf, SECTOR_LEN * 8);
+
+        uart_printf("Expected %d ones, got %d ones\n", expected_ones, actual_ones);
     }
 
     return ret;
@@ -135,10 +160,13 @@ int test_sector_io(const uint16_t *patterns, int num_patterns, int success_passe
 
         if (success_passes != -1) {
 
-            if (result == 0)
-                con_printf("Self-test %d/%d - P%d/%d\r", success_passes + 1, NUM_WARMUP_TEST_RUNS, i, num_patterns);
-            else
+            if (result == 0) {
+                con_printf("Self-test %d/%d - %04x\r", success_passes + 1, NUM_WARMUP_TEST_RUNS, patterns[i]);
+            } else {
                 con_printf("Self-test %d/%d - FAIL\r", success_passes + 1, NUM_WARMUP_TEST_RUNS);
+            }
+        } else {
+            uart_printf("Testing pattern %04x\n", patterns[i]);
         }
 
         ret = test_sector(TEST_SECTOR, patterns[i]);

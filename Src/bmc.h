@@ -24,10 +24,10 @@ void unsafe_drive();
  */
 #define DETECTOR_PRERUN_LEN 19
 
-#define GEN_TO_XFER_GATE    342
+#define GEN_TO_XFER_GATE    344
 
 /* We assume that "Transfer" is a two-cycle operation */
-#define XFER_GATE_TO_DET    66
+#define XFER_GATE_TO_DET    64
 
 /* Total number of minor loops, including bad loops */
 #define NUM_MINOR_LOOPS     157
