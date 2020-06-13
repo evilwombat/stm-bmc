@@ -80,7 +80,7 @@ static int minor_loop_position = 0;
 #define ANN_START   (14 - 3)
 #define ANN_LENGTH  (19 + 3)
 
-#define XIN_OFFSET  (-2)
+#define XIN_OFFSET  (0)
 #define XIN_LENGTH  (14)
 
 #define XOUT_OFFSET (19 - 2)
@@ -142,7 +142,7 @@ int run_function(int func, int detect)
     generate_function_timings(seq, func);
 
     unsafe_drive();
-    sequencer_run(seq, detect ? SEQ_SIZE : 80);
+    sequencer_run(seq, detect ? SEQ_SIZE : 70);
     safe_drive();
 
     step_loop_counter();

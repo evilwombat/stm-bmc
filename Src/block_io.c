@@ -100,6 +100,7 @@ int block_write(int block_num, const uint8_t *block_buf)
 {
     if (restore_sectors(block_num, block_buf, -1))
         return restore_sectors(block_num, block_buf, -1);
+    return 0;
 }
 
 static void combine_sector_buffers(uint8_t *dest, uint8_t *src)

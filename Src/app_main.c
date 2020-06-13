@@ -102,7 +102,7 @@ void warm_up_drive(int quick)
     for (i = cycles; i >= 0; i--) {
         gfx_draw_countdown(i);
         lcd_update();
-        step_bubbles(10000);
+        step_bubbles(20000);
 
         if (test_abort_requested()) {
             con_clear();
