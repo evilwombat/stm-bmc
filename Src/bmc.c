@@ -80,32 +80,32 @@ static int minor_loop_position = 0;
 #define ANN_START   (14 - 3)
 #define ANN_LENGTH  (19 + 3)
 
-#define XIN_OFFSET  (0)
+#define XIN_OFFSET  (-2)
 #define XIN_LENGTH  (14)
 
 #define XOUT_OFFSET (19 - 2)
-#define XOUT_LENGTH (11)
+#define XOUT_LENGTH (13)
 
 void insert_function_pulse(uint32_t *seq, int func, int pos)
 {
     if (func & FUNC_GEN) {
-        seq[pos + GEN_START] |= OFF(PIN_GEN);
-        seq[pos + GEN_START + GEN_LENGTH] |= ON(PIN_GEN);
+        seq[pos + GEN_START] |= ON(PIN_GEN);
+        seq[pos + GEN_START + GEN_LENGTH] |= OFF(PIN_GEN);
     }
 
     if (func & FUNC_ANN) {
-        seq[pos + ANN_START] |= OFF(PIN_ANN);
-        seq[pos + ANN_START + ANN_LENGTH] |= ON(PIN_ANN);
+        seq[pos + ANN_START] |= ON(PIN_ANN);
+        seq[pos + ANN_START + ANN_LENGTH] |= OFF(PIN_ANN);
     }
 
     if (func & FUNC_XIN) {
-        seq[pos + XIN_OFFSET] |= OFF(PIN_XIN);
-        seq[pos + XIN_OFFSET + XIN_LENGTH] |= ON(PIN_XIN);
+        seq[pos + XIN_OFFSET] |= ON(PIN_XIN);
+        seq[pos + XIN_OFFSET + XIN_LENGTH] |= OFF(PIN_XIN);
     }
 
     if (func & FUNC_XOUT) {
-        seq[pos + XOUT_OFFSET] |= OFF(PIN_XOUT);
-        seq[pos + XOUT_OFFSET + XOUT_LENGTH] |= ON(PIN_XOUT);
+        seq[pos + XOUT_OFFSET] |= ON(PIN_XOUT);
+        seq[pos + XOUT_OFFSET + XOUT_LENGTH] |= OFF(PIN_XOUT);
     }
 }
 
@@ -114,7 +114,7 @@ static void generate_function_timings(uint32_t *seq, int func)
     int pos = 0;
     int cxb_edge = 0;
 
-    seq[pos] =  ON(PIN_GEN) | ON(PIN_ANN) | ON(PIN_XIN) | ON(PIN_XOUT) | DRIVE_IDLE;
+    seq[pos] =  OFF(PIN_GEN) | OFF(PIN_ANN) | OFF(PIN_XIN) | OFF(PIN_XOUT) | DRIVE_IDLE;
     pos += 10;
 
     YA
@@ -229,11 +229,11 @@ void purge_major_loop()
 
 void safe_drive()
 {
-    GPIOB->ODR |= BIT(PIN_SAFETY);
-    GPIOB->ODR |= BIT(PIN_GEN);
-    GPIOB->ODR |= BIT(PIN_ANN);
-    GPIOB->ODR |= BIT(PIN_XIN);
-    GPIOB->ODR |= BIT(PIN_XOUT);
+    GPIOB->ODR &= ~BIT(PIN_SAFETY);
+    GPIOB->ODR &= ~BIT(PIN_GEN);
+    GPIOB->ODR &= ~BIT(PIN_ANN);
+    GPIOB->ODR &= ~BIT(PIN_XIN);
+    GPIOB->ODR &= ~BIT(PIN_XOUT);
 
     GPIOB->ODR &= ~BIT(DRV_EN_12);
     GPIOB->ODR &= ~BIT(DRV_EN_34);
@@ -242,7 +242,7 @@ void safe_drive()
 void unsafe_drive()
 {
     safe_drive();
-    GPIOB->ODR &= ~BIT(PIN_SAFETY);
+    GPIOB->ODR |= BIT(PIN_SAFETY);
 }
 
 int drive_power_state()
