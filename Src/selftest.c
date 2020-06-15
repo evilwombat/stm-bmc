@@ -124,7 +124,10 @@ int test_sector(int sector, uint16_t pattern)
     }
 
     bmc_read_sector_raw(sector, read_buf, SECTOR_LEN * 8);
-    bmc_write_sector_raw(sector, write_buf, SECTOR_LEN * 8);
+    ret = bmc_write_sector_raw(sector, write_buf, SECTOR_LEN * 8);
+
+    if (ret)
+        uart_printf("WARNING: Transfer In failed?\n");
 
     memset(read_buf, 0, sizeof(read_buf));
     bmc_read_sector_raw(sector, read_buf, SECTOR_LEN * 8);
@@ -139,6 +142,7 @@ int test_sector(int sector, uint16_t pattern)
         actual_ones = count_ones(read_buf, SECTOR_LEN * 8);
 
         bmc_read_sector_raw(sector, read_buf, SECTOR_LEN * 8);
+        dump_buffer_msg(read_buf,  SECTOR_LEN, "Re-read");
         bmc_read_sector_raw(sector, read_buf, SECTOR_LEN * 8);
 
         uart_printf("-----\n");

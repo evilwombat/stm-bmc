@@ -5,7 +5,7 @@
 static void step_loop_counter();
 static int minor_loop_position = 0;
 
-#define SEQ_SIZE    200
+#define SEQ_SIZE    300
 
 /* PORT A */
 #define PIN_DRIVE_STATE 15
@@ -76,6 +76,16 @@ static int minor_loop_position = 0;
 
 #define GEN_START   (1)
 #define GEN_LENGTH  (1)
+/*
+#define ANN_START   (14)
+#define ANN_LENGTH  (19 + 2)
+
+#define XIN_OFFSET  (0)
+#define XIN_LENGTH  (14)
+
+#define XOUT_OFFSET (19 - 1)
+#define XOUT_LENGTH (13)
+*/
 
 #define ANN_START   (14 - 3)
 #define ANN_LENGTH  (19 + 3)

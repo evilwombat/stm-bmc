@@ -546,7 +546,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : BUBBLE_DETECT_Pin */
   GPIO_InitStruct.Pin = BUBBLE_DETECT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(BUBBLE_DETECT_GPIO_Port, &GPIO_InitStruct);
 
