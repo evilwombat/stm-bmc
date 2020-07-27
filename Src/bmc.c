@@ -11,22 +11,31 @@ static int minor_loop_position = 0;
 #define PIN_DRIVE_STATE 15
 
 /* PORT B */
-#define PIN_SAFETY  0
+#define PIN_SAFETY  5
 
-#define PIN_ANN     15
-#define PIN_GEN     14
-#define PIN_XIN     13
-#define PIN_XOUT    12
+// 0 = LCD CS1      (CX_EN for now)
+// 1 = PWM
+// 2 = LCD_E        CX_EN    (DRV_EN_12)
 
-#define PIN_STROBE  11
+#define DRV_A1     13      /* CXA      */
+#define DRV_A2     15      /* CXB      */
 
-#define DRV_EN_12   7
-#define DRV_A1      3
-#define DRV_A2      4
+#define DRV_A3     14      /* CYA      */
+#define DRV_A4     12      /* CYB      */
 
-#define DRV_EN_34   8
-#define DRV_A3      5
-#define DRV_A4      6
+#define DRV_EN_12   0       /* CX_EN    */  /* Should be 2 */
+#define DRV_EN_34   3       /* CY_EN    */
+
+// 9 = PWM
+// 10 = UART
+
+#define PIN_STROBE  11      /* Unmodified */
+
+#define PIN_XOUT    7
+#define PIN_XIN     8
+#define PIN_GEN     4
+#define PIN_ANN     6
+
 
 /* See STM32 BSRR register spec */
 #define ON(b)       BIT(b)
