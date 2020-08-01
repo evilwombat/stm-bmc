@@ -52,6 +52,7 @@ void bmc_idle();
 void bmc_shut_down();
 void wait_for_drive_arm();
 void wait_for_drive_disarm();
+void check_initial_drive_state();
 
 int drive_power_state();
 void seek_to(int pos);

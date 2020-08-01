@@ -442,7 +442,7 @@ int bmc_write_sector_raw(int loop_pos, const uint8_t *buf, int num_bits)
     return ret;
 }
 
-void wait_for_drive_arm()
+void check_initial_drive_state()
 {
     if (drive_power_state()) {
         safe_drive();
@@ -452,7 +452,10 @@ void wait_for_drive_arm()
             HAL_Delay(100);
         }
     }
+}
 
+void wait_for_drive_arm()
+{
     uart_printf("Waiting for drive safety switch\n");
     con_printf("Arm the drive circuit\n");
 

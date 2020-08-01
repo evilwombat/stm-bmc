@@ -129,6 +129,7 @@ int app_main(void)
     int ret, choice;
 
     safe_drive();
+    check_initial_drive_state();
 
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
