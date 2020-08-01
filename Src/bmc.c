@@ -23,7 +23,7 @@ static int minor_loop_position = 0;
 #define DRV_A3     14      /* CYA      */
 #define DRV_A4     12      /* CYB      */
 
-#define DRV_EN_12   0       /* CX_EN    */  /* Should be 2 */
+#define DRV_EN_12   2       /* CX_EN    */
 #define DRV_EN_34   3       /* CY_EN    */
 
 // 9 = PWM
@@ -460,7 +460,7 @@ void wait_for_drive_arm()
         while (!drive_power_state());
 
         /* Lazy debouncing */
-        HAL_Delay(100);
+        HAL_Delay(500);
 
         if (drive_power_state()) {
             con_printf("Drive powered on.\nOkay, here we go.\n");
@@ -477,7 +477,7 @@ void wait_for_drive_disarm()
         while (drive_power_state());
 
         /* Lazy debouncing */
-        HAL_Delay(100);
+        HAL_Delay(500);
 
         if (!drive_power_state()) {
             con_printf("Drive powered off.\n");

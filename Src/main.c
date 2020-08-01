@@ -438,7 +438,7 @@ static void MX_USART3_UART_Init(void)
   huart3.Init.Mode = UART_MODE_TX;
   huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_HalfDuplex_Init(&huart3) != HAL_OK)
+  if (HAL_UART_Init(&huart3) != HAL_OK)
   {
     Error_Handler();
   }
@@ -486,20 +486,19 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, LCD_DI_Pin|LCD_CS2_Pin|LCD_CS1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, LCD_E_Pin|LCD_DI_Pin|LCD_CS2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, LCD_D0_Pin|LCD_D1_Pin|LCD_D2_Pin|LCD_D3_Pin 
                           |LCD_D4_Pin|LCD_D5_Pin|LCD_D6_Pin|LCD_D7_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, CX_EN_Pin|LCD_E_Pin|STROBE_Pin|CYB_Pin 
-                          |CXA_Pin|CYA_Pin|CXB_Pin|CY_EN_Pin 
-                          |FUNC_GEN_Pin|SAFETY_Pin|FUNC_ANN_Pin|FUNC_XOUT_Pin 
-                          |FUNC_XIN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, LCD_CS1_Pin|CX_EN_Pin|CYB_Pin|CXA_Pin 
+                          |CYA_Pin|CXB_Pin|CY_EN_Pin|FUNC_GEN_Pin 
+                          |SAFETY_Pin|FUNC_ANN_Pin|FUNC_XOUT_Pin|FUNC_XIN_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : LCD_DI_Pin LCD_CS2_Pin LCD_CS1_Pin */
-  GPIO_InitStruct.Pin = LCD_DI_Pin|LCD_CS2_Pin|LCD_CS1_Pin;
+  /*Configure GPIO pins : LCD_E_Pin LCD_DI_Pin LCD_CS2_Pin */
+  GPIO_InitStruct.Pin = LCD_E_Pin|LCD_DI_Pin|LCD_CS2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -514,23 +513,16 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : CX_EN_Pin STROBE_Pin CYB_Pin CXA_Pin 
+  /*Configure GPIO pins : LCD_CS1_Pin CX_EN_Pin CYB_Pin CXA_Pin 
                            CYA_Pin CXB_Pin CY_EN_Pin FUNC_GEN_Pin 
                            SAFETY_Pin FUNC_ANN_Pin FUNC_XOUT_Pin FUNC_XIN_Pin */
-  GPIO_InitStruct.Pin = CX_EN_Pin|STROBE_Pin|CYB_Pin|CXA_Pin 
+  GPIO_InitStruct.Pin = LCD_CS1_Pin|CX_EN_Pin|CYB_Pin|CXA_Pin 
                           |CYA_Pin|CXB_Pin|CY_EN_Pin|FUNC_GEN_Pin 
                           |SAFETY_Pin|FUNC_ANN_Pin|FUNC_XOUT_Pin|FUNC_XIN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : LCD_E_Pin */
-  GPIO_InitStruct.Pin = LCD_E_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(LCD_E_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : ENC_BUTTON_Pin DRIVE_STATE_Pin */
   GPIO_InitStruct.Pin = ENC_BUTTON_Pin|DRIVE_STATE_Pin;

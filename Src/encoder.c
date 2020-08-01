@@ -14,7 +14,7 @@ void encoder_init()
 
 uint16_t encoder_read()
 {
-    return TIM1->CNT;
+    return TIM1->CNT >> 1;
 }
 
 int encoder_pressed()

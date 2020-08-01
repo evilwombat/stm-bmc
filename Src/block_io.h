@@ -13,7 +13,7 @@
 /* Including CRC and possibly gaps for minor loops */
 #define SECTOR_LEN          18
 
-#define SECTOR_REDUNDANCY   7
+#define SECTOR_REDUNDANCY   6
 
 #define NUM_BLOCKS          ((MINOR_LOOP_LEN - 1) / SECTOR_REDUNDANCY)
 #define START_SECTOR        1
