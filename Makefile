@@ -38,7 +38,6 @@ BUILD_DIR = build
 C_SOURCES =  \
 Src/main.c \
 Src/app_main.c \
-Src/attic.c \
 Src/sequencer.c \
 Src/bitbuffer.c \
 Src/bmc.c \

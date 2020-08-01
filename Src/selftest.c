@@ -205,11 +205,16 @@ void run_sector_tests()
     int success_run = 0;
     do {
         iter++;
-        ret = test_sector_io(test_pattern_standard, ARRAY_SIZE(test_pattern_standard), -1);
+        ret = test_sector_io(test_pattern_standard, ARRAY_SIZE(test_pattern_standard), success_run);
 
         if (ret == SELFTEST_PASS) {
             success_run++;
             uart_printf("%03d PASS (%d)\n", iter, success_run);
+
+            if (success_run == NUM_WARMUP_TEST_RUNS) {
+                con_printf("Starting new batch\n");
+                success_run = 0;
+            }
         }
 
         if (ret == SELFTEST_FAIL) {
