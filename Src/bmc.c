@@ -456,6 +456,14 @@ void check_initial_drive_state()
 
 void wait_for_drive_arm()
 {
+    if (drive_power_state()) {
+        con_printf("Drive is armed\n");
+        HAL_Delay(500); /* Lazy debounce, "just in case" */
+
+        if (drive_power_state())
+            return;
+    }
+
     uart_printf("Waiting for drive safety switch\n");
     con_printf("Arm the drive circuit\n");
 
@@ -474,6 +482,11 @@ void wait_for_drive_arm()
 
 void wait_for_drive_disarm()
 {
+    if (!drive_power_state()) {
+        con_printf("Drive is disarmed\n");
+        return;
+    }
+
     con_printf("Disarm the drive now\n");
 
     while(1) {

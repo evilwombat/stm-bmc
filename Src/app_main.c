@@ -129,6 +129,7 @@ int app_main(void)
     int ret, choice;
 
     safe_drive();
+    lcd_init();
     check_initial_drive_state();
 
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
@@ -138,7 +139,6 @@ int app_main(void)
     uart_printf("Start\n");
 
     encoder_init();
-    lcd_init();
     con_init();
 
     con_set_font(&font_3x5);
@@ -151,63 +151,71 @@ int app_main(void)
     bubble_storage_init();
 
     HAL_Delay(2000);
-    con_clear();
-    con_set_font(&font_5x7);
-    con_printf(" ARM Bubble System \\\n");
-    con_set_font(&font_3x5);
-    con_printf("  github.com/evilwombat");
-    con_set_font(&font_5x7);
 
-    con_gotoxy(0, 19);
-    choice = run_menu(main_menu, con_cur_y());
+    while(1) {
 
-    con_printf("\n");
+        con_clear();
+        con_set_font(&font_5x7);
+        con_printf(" ARM Bubble System \\\n");
+        con_set_font(&font_3x5);
+        con_printf("  github.com/evilwombat");
+        con_set_font(&font_5x7);
 
-    wait_for_drive_arm();
+        con_gotoxy(0, 19);
+        choice = run_menu(main_menu, con_cur_y());
 
-    if (choice == 0 || choice == 1) {
-        music_start();
-        warm_up_drive(choice == 1); /* Fast warmup? */
+        con_printf("\n");
+
+        wait_for_drive_arm();
+
+        if (choice == 0 || choice == 1) {
+            music_start();
+            warm_up_drive(choice == 1); /* Fast warmup? */
+
+            uart_printf("Running detector tests...\n");
+
+            ret = warm_up_detector();
+
+            if (ret != 0) {
+                music_stop();
+                if (ret == SELFTEST_FAIL)
+                    con_printf("Warm-up test failed! Check detector calibration?\n");
+
+                bmc_shut_down();
+            }
+
+            bmc_idle();
+
+            load_payload();
+            music_stop();
+            launch_payload();
+            bmc_shut_down();    /* We should never get here */
+            while(1);
+        }
+
+        if (choice == 2) {
+            con_printf("Writing payload\n");
+            write_payload();
+            bmc_shut_down();
+            while(1);
+        }
+
+        /* Sector tests */
+        if (choice == 3) {
+            con_printf("Running sector tests\n");
+            run_sector_tests();
+            HAL_Delay(1500);
+            continue;
+        }
+
+        /* Major loop test */
+        if (choice == 4) {
+            con_printf("Testing major loop\n");
+            test_major_loop();
+            HAL_Delay(1500);
+            continue;
+        }
     }
-
-    /* Sector tests */
-    if (choice == 3) {
-        con_printf("Running sector tests\n");
-        run_sector_tests();
-        bmc_shut_down();
-    }
-
-    /* Major loop test */
-    if (choice == 4) {
-        con_printf("Testing major loop\n");
-        test_major_loop();
-        bmc_shut_down();
-    }
-
-    uart_printf("Running detector tests...\n");
-
-    ret = warm_up_detector();
-
-    if (ret != 0) {
-        music_stop();
-        if (ret == SELFTEST_FAIL)
-            con_printf("Warm-up test failed! Check detector calibration?\n");
-
-        bmc_shut_down();
-    }
-
-    bmc_idle();
-
-    if (choice == 2) {
-        con_printf("Writing payload\n");
-        write_payload();
-        bmc_shut_down();
-    }
-
-    load_payload();
-    music_stop();
-    launch_payload();
-    while(1);
 
 //    while(1)
 //        try_transfer_fancy();
