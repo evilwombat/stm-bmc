@@ -68,9 +68,10 @@ static int sector_index(int block_num, int num_copy)
 
 static int restore_sectors(int block_num, const uint8_t *block_buf, int redundancy_mask)
 {
-    int i, ret = 0;
+    int i, ret = 0, retries, write_result;
 
     uint8_t sector_buf[SECTOR_LEN];
+    uint8_t scratch_buf[SECTOR_LEN];
     memset(sector_buf, 0, sizeof(sector_buf));
 
     for (i = 0; i < SECTOR_REDUNDANCY; i++) {
@@ -78,8 +79,23 @@ static int restore_sectors(int block_num, const uint8_t *block_buf, int redundan
             memcpy(sector_buf, block_buf, BLOCK_LEN);
             insert_crc(sector_buf);
             shift_sector(sector_buf, sector_shifts[i]);
-            if (bmc_write_sector_raw(sector_index(block_num, i), sector_buf, SECTOR_LEN * 8))
-                ret++;
+
+            retries = 0;
+
+            do {
+                write_result = bmc_write_sector_raw(sector_index(block_num, i), sector_buf, SECTOR_LEN * 8);
+
+                if (write_result) {
+                    retries++;
+                    // Erase sector before attempting rewrite, otherwise things will collide
+                    bmc_read_sector_raw(sector_index(block_num, i), scratch_buf, SECTOR_LEN * 8);
+                }
+            } while (write_result && retries < 20);
+
+            if (retries)
+                uart_printf("Warning: write to sector %d took %d retries\n", sector_index(block_num, i), retries);
+
+            ret += write_result;
         }
     }
 
