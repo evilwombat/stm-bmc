@@ -57,44 +57,21 @@ static int minor_loop_position = 0;
 #define CYA_END     DRIVE_OFF(DRV_EN_34, DRV_A3)
 #define CYB_END     DRIVE_OFF(DRV_EN_34, DRV_A4)
 
+/* Offsets of the coil pulses with respect to their "ideal" timings, in units of 0.25uS,
+ * to deal with things like H-bridge turn-ondelays.
+ */
 #define CX_OFFSET  (-3)
 #define CY_OFFSET  (-3)
 
+/* Lengths of coil drive pulses */
 #define CX_LENGTH  (12)
 #define CY_LENGTH  (12)
 
-#define XA                                      \
-    seq[pos + CX_OFFSET] |= CXA_START;          \
-    seq[pos + CX_OFFSET + CX_LENGTH] |= CXA_END;\
-    pos += 10;                                  \
+#define COIL_PULSE_SPACING    10
 
-#define YA                                      \
-    seq[pos + CY_OFFSET] |= CYA_START;          \
-    seq[pos + CY_OFFSET + CY_LENGTH] |= CYA_END;\
-    pos += 10;                                  \
-
-#define XB                                      \
-    seq[pos + CX_OFFSET] |= CXB_START;          \
-    seq[pos + CX_OFFSET + CX_LENGTH] |= CXB_END;\
-    pos += 10;                                  \
-
-#define YB                                      \
-    seq[pos + CY_OFFSET] |= CYB_START;          \
-    seq[pos + CY_OFFSET + CY_LENGTH] |= CYB_END;\
-    pos += 10;                                  \
-
+/* Timings of the function pulses, in units of 0.25uS, starting with the last CXB edge */
 #define GEN_START   (1)
 #define GEN_LENGTH  (1)
-/*
-#define ANN_START   (14)
-#define ANN_LENGTH  (19 + 2)
-
-#define XIN_OFFSET  (0)
-#define XIN_LENGTH  (14)
-
-#define XOUT_OFFSET (19 - 1)
-#define XOUT_LENGTH (13)
-*/
 
 #define ANN_START   (14 - 3)
 #define ANN_LENGTH  (19 + 3)
@@ -104,6 +81,15 @@ static int minor_loop_position = 0;
 
 #define XOUT_OFFSET (19 - 2)
 #define XOUT_LENGTH (14)
+
+int insert_coil_pulse(uint32_t *seq, int pos, int offset, int length, uint32_t start_pattern, uint32_t end_pattern)
+{
+    seq[pos + offset] |= start_pattern;
+    seq[pos + offset + length] |= end_pattern;
+
+    /* Return amount of "time" consumed */
+    return COIL_PULSE_SPACING;
+}
 
 void insert_function_pulse(uint32_t *seq, int func, int pos)
 {
@@ -136,14 +122,19 @@ static void generate_function_timings(uint32_t *seq, int func)
     seq[pos] =  OFF(PIN_GEN) | OFF(PIN_ANN) | OFF(PIN_XIN) | OFF(PIN_XOUT) | DRIVE_IDLE;
     pos += 10;
 
-    YA
-    cxb_edge = pos;
-    insert_function_pulse(seq, func, pos);
-    XB
-    YB
-    XA
-    YA
+    /* Drive cycle - YA, <function start> XB, YB, XA, YA */
+    pos += insert_coil_pulse(seq, pos, CY_OFFSET, CY_LENGTH, CYA_START, CYA_END);
+    cxb_edge = pos; /* Store position of the XB pulse, since the function timings are relative to this */
+    pos += insert_coil_pulse(seq, pos, CX_OFFSET, CX_LENGTH, CXB_START, CXB_END);
+    pos += insert_coil_pulse(seq, pos, CY_OFFSET, CY_LENGTH, CYB_START, CYB_END);
+    pos += insert_coil_pulse(seq, pos, CX_OFFSET, CX_LENGTH, CXA_START, CXA_END);
+    pos += insert_coil_pulse(seq, pos, CY_OFFSET, CY_LENGTH, CYA_START, CYA_END);
 
+    insert_function_pulse(seq, func, cxb_edge);
+
+    /* Insert a strobe pulse, but this is just for debug / scoping, since our bubble
+     * detector doesn't actually actually use a strobe pulse for capturing peaks
+     */
     if (func & FUNC_STR) {
        seq[cxb_edge + 7] |= ON(PIN_STROBE);
        seq[cxb_edge + 8 + 20] |= OFF(PIN_STROBE);
