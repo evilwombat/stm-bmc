@@ -100,10 +100,10 @@ static int minor_loop_position = 0;
 #define ANN_LENGTH  (19 + 3)
 
 #define XIN_OFFSET  (-2)
-#define XIN_LENGTH  (14)
+#define XIN_LENGTH  (15)
 
 #define XOUT_OFFSET (19 - 2)
-#define XOUT_LENGTH (13)
+#define XOUT_LENGTH (14)
 
 void insert_function_pulse(uint32_t *seq, int func, int pos)
 {
