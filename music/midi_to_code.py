@@ -12,19 +12,6 @@ def print_track(track):
 
     for msg in track:
         t = msg.time
-#
-    #    if t % 10 == 9:
-    #        t += 1
-#
-    #    if t % 10 == 8:
-    #        t += 2
-#
-    #    if t < 10:
-    #        t = 0
-#
-    #    if t % 10 == 1:
-    #        t -= 1
-        
         time += t
 
         if msg.type != 'note_on':
@@ -75,5 +62,8 @@ print "const uint16_t note_values[] = {"
 for i in range(0, 127):
     freq = pow(2, (i - 69) / 12.0) * 440
     tval = 1000000 / freq
+    if (tval > 65535):
+        tval = 65535;
+
     print "    " + str(int(tval)) + ","
 print "};"
