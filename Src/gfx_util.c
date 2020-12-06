@@ -5,6 +5,8 @@
 #include "encoder.h"
 #include "console.h"
 
+/* Bitmaps of the big digits for the warmup countdown */
+
 const static uint8_t digit_data[10 * 7] = {
     /* 0 */
     0b1111111,
@@ -212,31 +214,4 @@ int run_menu(const char **items, int y)
         }
     }
 
-}
-
-void gfx_test()
-{
-    con_gotoxy(10, 0);
-    con_printf("READING PAYLOAD NOW");
-/*
-    for (int i = 0; i < 128; i++)
-        for (int j = 0; j < 64; j++)
-            lcd_pset(i, j, 1);
-
-    lcd_update();
-
-    lcd_pset(21, 20, 0);
-    lcd_update();
-    
-    while(1);
-*/
-    while(1) {
-        for (int i = 0; i < 100; i++) {
-            gfx_draw_countdown(99 - i);
-            lcd_update();
-            HAL_Delay(1000);
-        }
-    }
-
-    while(1);
 }
