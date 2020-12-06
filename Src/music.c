@@ -23,6 +23,7 @@ struct {
     int cooldown;
 } music_state;
 
+/* Configure a given PWM channel to play a given MIDI note number (0 = off) */
 static void play_note(int channel, uint8_t note) {
     uint16_t pwm_val = 0;
 
@@ -55,16 +56,21 @@ static void music_init()
     int i;
     memset(&music_state, 0, sizeof(music_state));
 
+    /* We use TIM3 and TIM4 as our two music channels */
     HAL_TIM_OC_Start(&htim3, TIM_CHANNEL_4);
     HAL_TIM_OC_Start(&htim4, TIM_CHANNEL_4);
 
     __HAL_TIM_ENABLE(&htim3);
     __HAL_TIM_ENABLE(&htim4);
 
+    /* Stop all notes */
     for (i = 0; i < NUM_TRACKS; i++)
         play_note(i, 0);
 }
 
+/* Advance the player state machine by one step, which may or may not involve activating the next
+ * note on a track. This needs to be called at a fixed period, for smooth playback
+ */
 static void music_step()
 {
     int t;
@@ -127,6 +133,7 @@ void music_stop()
         play_note(i, 0);
 }
 
+/* Play the next note, if needed. Called via the SysTick interrupt */
 void handle_systick_music()
 {
     if (!music_state.enabled)
@@ -140,17 +147,3 @@ void handle_systick_music()
     music_state.cooldown = 32;
     music_step();
 }
-
-void test_pwm()
-{
-    HAL_Delay(500);
-
-    uart_printf("hello pwm\n");
-
-    music_init();
-
-    music_state.enabled = 1;
-
-    while(1);
-}
-

@@ -20,6 +20,8 @@ struct payload_header {
 } __attribute__((packed));
 
 #define PAYLOAD_MAX_SIZE    4096
+
+/* Placed at a fixed address using linker script. This way payloads can avoid being position-independent. */
 uint8_t __attribute__((section (".payloadBufferSection"))) payload_buf[PAYLOAD_MAX_SIZE];
 
 void write_payload()
@@ -28,9 +30,13 @@ void write_payload()
     int payload_size = sizeof(payload_raw);
     int num_blocks = (payload_size + BLOCK_LEN - 1) / BLOCK_LEN;
 
-    /* Unscramble the payload */
     memset(payload_buf, 0, sizeof(payload_buf));
 
+    /* Unscramble the payload. To make absolutely sure that we're launching a payload that was
+     * loaded from the bubble device (rather than our own baked-in copy) we store the baked-in
+     * payload in bit-flipped form, to rule out the possibility of inadvertently jumping to it
+     * in flash and seeing a valid result.
+     */
     for (i = 0; i < sizeof(payload_raw); i++)
         payload_buf[i] = payload_raw[i] ^ 0xff;
 
@@ -152,6 +158,9 @@ void launch_payload()
     __HAL_TIM_ENABLE(&htim3);
     __HAL_TIM_ENABLE(&htim4);
 
+    /* Leave TIM4 running, as a pseudo-RNG for games, so that payloads don't need to pull in the
+     * entire timer HAL
+     */
     TIM4->CNT = 0;
     TIM4->CR1 &= ~TIM_CR1_CEN;
     TIM4->ARR = 512;
@@ -160,10 +169,12 @@ void launch_payload()
     TIM4->CR1 |= TIM_CR1_CEN;
 
     asm volatile("blx %[dest]"
-           : /* Rotation result. */
-           : [dest]"r"   (branch_destination) /* Rotated value. */
+           : /* No result */
+           : [dest]"r"   (branch_destination) /* Place to jump */
            : /* No clobbers */
     );
+
+    /* We should not get here, unless the payload 'returns' via LR */
 
     con_printf("We're BACK??\n");
 

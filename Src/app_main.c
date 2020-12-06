@@ -157,7 +157,7 @@ int app_main(void)
         /* Sector tests */
         if (choice == 3) {
             con_printf("Running sector tests\n");
-            run_sector_tests();
+            test_minor_loops();
             HAL_Delay(1500);
             continue;
         }

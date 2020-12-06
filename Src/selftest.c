@@ -8,6 +8,10 @@
 #include "block_io.h"
 #include "selftest.h"
 
+/* The user can press the encoder button at any time to abort a test in progress. This ensures the
+ * bubble device is returned to its initial position (sector 0 rotated to the top of the minor
+ * loops) so that we can power down without data loss.
+ */
 int test_abort_requested()
 {
     if (!encoder_pressed()) {
@@ -77,7 +81,6 @@ int test_major_loop()
 
     return SELFTEST_ABORTED;
 }
-
 
 const uint16_t test_pattern_standard[] = {
     0x5555,
@@ -156,7 +159,7 @@ int test_sector(int sector, uint16_t pattern)
     return ret;
 }
 
-int test_sector_io(const uint16_t *patterns, int num_patterns, int success_passes)
+static int test_sector_io(const uint16_t *patterns, int num_patterns, int success_passes)
 {
     int result = 0;
     int i, ret;
@@ -198,7 +201,7 @@ int test_sector_io(const uint16_t *patterns, int num_patterns, int success_passe
     }
 }
 
-void run_sector_tests()
+void test_minor_loops()
 {
     int ret;
     int iter = 0;

@@ -5,8 +5,15 @@
 #include "util.h"
 #include "console.h"
 
+/* Rotate each redundant copy of a sector by this many bits, to avoid a situation where one extra
+ * defective loop causes the same bit in all copies to be currupt
+ */
 const int sector_shifts[SECTOR_REDUNDANCY] = {0, 6, 12, 3, 9, 2, 7};
 
+/* Calculate and insert a CRC into a block buffer. Block buffers are the same capacity as sector
+ * buffers, but blocks are shorter. A sector buffer has enough space for the block contents, CRC,
+ * and the bits corresponding to defective loops.
+ */
 static void insert_crc(uint8_t *block_buf)
 {
     uint16_t crc = crc16(block_buf, BLOCK_LEN);
@@ -21,13 +28,10 @@ static int verify_crc(uint8_t *block_buf)
     uint16_t crc_actual = crc16(block_buf, BLOCK_LEN);
     uint16_t crc_stored = (block_buf[SERCTOR_CRC_OFFSET]) | (block_buf[SERCTOR_CRC_OFFSET + 1] << 8);
 
-    if (crc_stored != crc_actual) {
-//        uart_printf("CRC mismatch: %04x vs %04x\n", crc_stored, crc_actual);
-    }
-
     return crc_stored != crc_actual;
 }
 
+/* Read a given sector and check CRC */
 int bmc_read_sector(int loop_pos, uint8_t *buf)
 {
     bmc_read_sector_raw(loop_pos, buf, SECTOR_LEN * 8);
@@ -35,12 +39,16 @@ int bmc_read_sector(int loop_pos, uint8_t *buf)
     return verify_crc(buf);;
 }
 
+/* Write a given block buffer to a given sector, inserting a CRC in the process */
 int bmc_write_sector(int loop_pos, uint8_t *buf)
 {
     insert_crc(buf);
     return bmc_write_sector_raw(loop_pos, buf, SECTOR_LEN * 8);
 }
 
+/* Rotate a sector buffer by an arbitrary number of bits, through the entire
+ * length of the sector
+ */
 static void shift_sector(uint8_t *buf, int amount)
 {
     uint8_t output_buf[SECTOR_LEN];
@@ -61,11 +69,15 @@ static void shift_sector(uint8_t *buf, int amount)
     memcpy(buf, output_buf, sizeof(output_buf));
 }
 
+/* Determine the the sector address of a particular redundant copy of a given block number */
 static int sector_index(int block_num, int num_copy)
 {
     return START_SECTOR + block_num * SECTOR_REDUNDANCY + num_copy;
 }
 
+/* Write a block buffer to the given redundant copies of the sector(s) corresponding to a given
+ * block number.
+ */
 static int restore_sectors(int block_num, const uint8_t *block_buf, int redundancy_mask)
 {
     int i, ret = 0, retries, write_result;
@@ -102,6 +114,7 @@ static int restore_sectors(int block_num, const uint8_t *block_buf, int redundan
     return ret;
 }
 
+/* Erase all sectors corresponding to a given block */
 void block_erase(int block_num)
 {
     uint8_t sector_buf[SECTOR_LEN];
@@ -112,6 +125,7 @@ void block_erase(int block_num)
     }
 }
 
+/* Write a block buffer to a given block. The block must be erased separately. */
 int block_write(int block_num, const uint8_t *block_buf)
 {
     if (restore_sectors(block_num, block_buf, -1))
@@ -119,6 +133,7 @@ int block_write(int block_num, const uint8_t *block_buf)
     return 0;
 }
 
+/* Combine the results of two reads of the same sector, in case the transfer gate is glitchy */
 static void combine_sector_buffers(uint8_t *dest, uint8_t *src)
 {
     int i;
@@ -126,6 +141,7 @@ static void combine_sector_buffers(uint8_t *dest, uint8_t *src)
         dest[i] |= src[i];
 }
 
+/* Non-destructively read a given block, optionally counting the number of retries */
 int block_read(int block_num, uint8_t *block_buf, int *error_count)
 {
     int read_mask = 0;
@@ -224,6 +240,7 @@ int block_read(int block_num, uint8_t *block_buf, int *error_count)
     return !success;
 }
 
+/* Get the hardware ready, do some very basic sanity checks, and print storage into */
 void bubble_storage_init()
 {
     con_printf("Setting up function driver DMA\n");

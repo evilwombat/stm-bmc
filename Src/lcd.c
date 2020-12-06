@@ -5,11 +5,15 @@
 #include "main.h"
 #include "font.h"
 
+/* Internal details of the CFAG12864 display, controlled internally via by
+ * KS0107 / KS0108 or equivalent
+ */
 #define NUM_PAGES   8
 #define NUM_ADDR    64
 #define DELAY_CYCLES    72
 #define FB_SIZE     1024
 
+/* Bit reverse table, for speed. The display is mounted upside down, so this is helpful */
 const static uint8_t bitrev_lut[256] = {
     0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0, 0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
     0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8, 0x18, 0x98, 0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8,
@@ -29,6 +33,7 @@ const static uint8_t bitrev_lut[256] = {
     0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef, 0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff,
 };
 
+/* Raw display buffer */
 static uint8_t vram[FB_SIZE];
 
 struct {
@@ -171,11 +176,6 @@ static void lcd_update_pages(uint8_t page_mask_0, uint8_t page_mask_1)
 void lcd_update()
 {
     lcd_update_pages(lcd_state.dirty_pages, lcd_state.dirty_pages);
-}
-
-void lcd_update_all()
-{
-    lcd_update_pages(-1, -1);
 }
 
 void lcd_draw_text(const char *text, const struct font *f, int x, int y)
@@ -360,20 +360,4 @@ void lcd_pset(int x, int y, int value)
     vram[offset] |= value;
 
     lcd_state.dirty_pages |= BIT(page);
-}
-
-void lcd_test()
-{  
-    int i = 0;
-
-    while(1) {
-        lcd_pset(i, i, 1);
-        lcd_update();
-        i++;
-
-     //   HAL_Delay(100);
-    }
-
-
-    while(1);
 }

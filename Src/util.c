@@ -59,22 +59,3 @@ int detector_poll()
 {
     return !!(GPIOA->IDR & BIT(12));
 }
-/*
-void counter_init()
-{
-    __HAL_RCC_TIM1_CLK_ENABLE();
-    __HAL_TIM_ENABLE(&htim1);
-    TIM1->CR1 = 1;           // Enable the counter
-    TIM1->CNT = 0;
-}
-
-void counter_reset()
-{
-    TIM1->CNT = 0;
-}
-
-int counter_read()
-{
-    return TIM1->CNT != 0;
-}
-*/

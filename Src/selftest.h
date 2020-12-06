@@ -8,12 +8,20 @@
 
 #define NUM_WARMUP_TEST_RUNS   5
 
-extern const uint16_t test_pattern_standard[];
-extern const uint16_t test_pattern_extra[];
-
-int test_major_loop();
-int test_sector_io(const uint16_t *patterns, int num_patterns, int success_count);
-
+/* Perform minor loop / detector tests until they pass N times in a row (see above).
+ * This indicates the detector circuit is warmed up and stable enough that we can start
+ * performing destructive reads (and re-writes) with reasonable confidence.
+ */
 int warm_up_detector();
-void run_sector_tests();
+
+/* The user can press the encoder button at any time to abort a test in progress. This ensures the
+ * bubble device is returned to its initial position (sector 0 rotated to the top of the minor
+ * loops) so that we can power down without data loss.
+ */
 int test_abort_requested();
+
+/* Useful when manually trimming/tuning the detector. A scope is highly, highly recommended here. */
+int test_major_loop();
+
+/* Run detector tests continuously, for testing reliability / temperature stability. */
+void test_minor_loops();
