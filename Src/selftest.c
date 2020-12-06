@@ -250,7 +250,7 @@ int warm_up_detector()
         uart_printf("Test iteration %3d, result = %s, run = %d\n", i, ret ? "FAIL" : "PASS", success_run);
 
         if (success_run >= NUM_WARMUP_TEST_RUNS) {
-            con_printf("\rSelf-test PASS ?\n");
+            con_printf("\rSelf-tests OK\n");
             uart_printf("Okay, we're good to go?\n");
             return 0;
         }

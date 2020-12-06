@@ -42,7 +42,7 @@ static int minor_loop_position = 0;
 #define OFF(b)      BIT((b) + 16)
 
 #define DRIVE_ON(on_side, off_side, enable)     (ON(enable) | ON(on_side) | OFF(off_side))
-#define DRIVE_OFF(enable)                       (OFF(enable))
+#define DRIVE_OFF(enable, on_side)              (OFF(enable) | OFF(on_side))
 
 #define DRIVE_IDLE  (OFF(DRV_EN_12) | OFF(DRV_EN_34))
 
@@ -52,10 +52,10 @@ static int minor_loop_position = 0;
 #define CYA_START   DRIVE_ON(DRV_A3, DRV_A4, DRV_EN_34)
 #define CYB_START   DRIVE_ON(DRV_A4, DRV_A3, DRV_EN_34)
 
-#define CXA_END     DRIVE_OFF(DRV_EN_12)
-#define CXB_END     DRIVE_OFF(DRV_EN_12)
-#define CYA_END     DRIVE_OFF(DRV_EN_34)
-#define CYB_END     DRIVE_OFF(DRV_EN_34)
+#define CXA_END     DRIVE_OFF(DRV_EN_12, DRV_A1)
+#define CXB_END     DRIVE_OFF(DRV_EN_12, DRV_A2)
+#define CYA_END     DRIVE_OFF(DRV_EN_34, DRV_A3)
+#define CYB_END     DRIVE_OFF(DRV_EN_34, DRV_A4)
 
 #define CX_OFFSET  (-3)
 #define CY_OFFSET  (-3)
