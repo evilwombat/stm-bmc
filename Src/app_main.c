@@ -31,62 +31,14 @@
 #include "loader.h"
 #include "selftest.h"
 
-void check_drive_state()
-{
-    if (!drive_power_state()) {
-        con_printf("Drive is off...\n");
-        while(!drive_power_state());
-    }
-}
-
-void test_read_block(int block, int show)
-{
-    uint8_t read_buf[BLOCK_LEN];
-    int ret;
-    int error_count = 0;
-    char note_msg[128];
-
-    if (show)
-        uart_printf("Read %3d: ", block);
-
-    memset(read_buf, 0, sizeof(read_buf));
-
-    ret = block_read(block, read_buf, &error_count);
-
-    snprintf(note_msg, sizeof(note_msg), "%s  errors %s: %d", 
-        ret == 0 ? "(ok)" : "UNCORRECTABLE ERROR",
-        ret == 0 ? "corrected" : "!!!!!",
-        error_count);
-
-    if (show)
-        dump_buffer_msg(read_buf, BLOCK_LEN, note_msg);
-}
-
-void test_write_block(int block) 
-{
-    uint8_t write_buf[BLOCK_LEN];
-
-    memset(write_buf, block + 0xf0, sizeof(write_buf));
-
-    con_printf("Write to %3d: ", block);
-
-    if (block & 0x01) {
-        write_buf[0] = 0xAA;
-        write_buf[1] = 0x55;
-    } else {
-        write_buf[0] = 0x55;
-        write_buf[1] = 0xAA;
-    }
-
-    block_erase(block);
-
-    if (block_write(block, write_buf) == 0) {
-        con_printf("Success\n");
-    } else {
-        con_printf("Detected unexpected bubbles??\n");
-    }
-}
-
+/* Perform a warm-up routine of the drive and related electronics.
+ * This is done by repeatedly rotating the drive field, and presumably heating the device to
+ * a steady-state temperature through resistive losses on the drive coils.
+ * The TIB-S0004 technically does not require warm-up, but it does require some temperature
+ * compensation (which we don't do). Becuase the detector circult is a bit suboptimal and
+ * finnicky, it seems to benefit from some warmup as well, though technically cycling just
+ * the drive coils shouldn't affect the temperature of the external detector circuit...
+ */
 void warm_up_drive(int quick)
 {
     int i;
@@ -115,6 +67,7 @@ void warm_up_drive(int quick)
     con_printf("\rWarming up done!   \n");
 }
 
+/* Main menu items */
 static const char *main_menu[] = {
     "Bubble memory loader",
     "Fast warmup (CAREFUL)",
@@ -124,17 +77,17 @@ static const char *main_menu[] = {
     NULL,
 };
 
+/* Application entry point, after CubeMX system init */
 int app_main(void)
 {
     int ret, choice;
 
     safe_drive();
     lcd_init();
+
+    /* Inform the user if they accidentally turned on the drive before turning on the MCU */
     check_initial_drive_state();
 
-    uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uart_printf("Start\n");
 
@@ -148,6 +101,7 @@ int app_main(void)
     __enable_irq();
     HAL_Delay(200);
 
+    /* Show a brief splash / information screen */
     bubble_storage_init();
 
     HAL_Delay(2000);
@@ -216,7 +170,4 @@ int app_main(void)
             continue;
         }
     }
-
-//    while(1)
-//        try_transfer_fancy();
 }
