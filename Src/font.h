@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+/* Some bitmapped fonts */
+
 struct font {
     uint8_t width;
     uint8_t height;
