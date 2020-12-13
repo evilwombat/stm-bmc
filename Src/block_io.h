@@ -21,7 +21,7 @@
 #define SECTOR_LEN          18
 
 /* How many redundant sector copies are used for each block */
-#define SECTOR_REDUNDANCY   6
+#define SECTOR_REDUNDANCY   5
 
 /* Total number of blocks available to the user for storage */
 #define NUM_BLOCKS          ((MINOR_LOOP_LEN - 1) / SECTOR_REDUNDANCY)
