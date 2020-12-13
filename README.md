@@ -23,7 +23,7 @@ The STM32 produces digital control pulses. From the analog side, we also have:
 * Four constant-current sources (BJTs with resistor network) to produce bubble control pulses
 * Sense amplifier, to convert weak detector signals into digital pulses
 
-Documentation, schematics, PCB layout, code cleanup are forthcoming. I need to sleep.
+Documentation, schematics, PCB layout, and historical datasheets/documents are now posted.
 
 
 Breadboard version:
